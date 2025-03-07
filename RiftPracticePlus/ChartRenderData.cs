@@ -3,11 +3,11 @@ using RiftEventCapture.Common;
 
 namespace RiftPracticePlus;
 
-public class RenderData {
+public class ChartRenderData {
     public readonly List<Note> Notes;
     public readonly BeatData BeatData;
 
-    public RenderData(CaptureResult captureResult) {
+    public ChartRenderData(CaptureResult captureResult) {
         Notes = new List<Note>();
 
         var riftEvents = captureResult.RiftEvents;

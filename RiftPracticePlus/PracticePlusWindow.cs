@@ -1,59 +1,41 @@
-﻿using Shared;
-using Shared.RhythmEngine;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace RiftPracticePlus;
 
-public class PracticePlusWindow : MonoBehaviour {
-    private const float HIDE_CURSOR_AFTER_TIME = 2f;
+public class PracticePlusWindow {
+    private const int SIDE_PADDING = 8;
+    private const int TOP_PADDING = 20;
+    private static readonly string[] STARTING_VIBE_OPTIONS = { "0", "1", "2" };
 
-    private BeatmapPlayer beatmapPlayer;
-    private RenderData renderData;
-    private ChartRenderer chartRenderer;
-    private bool visible = true;
-    private float mouseMovedAt;
-    private int firstBeatIndex = 1;
-    private int firstNoteIndex;
+    public int StartingVibe { get; private set; }
 
-    private void Update() {
-        if (Input.GetKeyDown(KeyCode.P)) {
-            visible = !visible;
-            Cursor.visible = visible;
-            mouseMovedAt = Time.time;
-        }
+    private Rect windowRect;
 
-        if (!visible || !GameWindow.Instance._isFocused)
-            return;
+    private readonly RectInt drawSpaceRect;
+    private readonly ChartRenderer chartRenderer;
 
-        if (Input.GetAxis("Mouse X") != 0f || Input.GetAxis("Mouse Y") != 0f) {
-            Cursor.visible = true;
-            mouseMovedAt = Time.time;
-        }
-        else if (Cursor.visible && Time.time > mouseMovedAt + HIDE_CURSOR_AFTER_TIME)
-            Cursor.visible = false;
+    public PracticePlusWindow(int x, int y, int windowWidth, int windowHeight) {
+        windowRect = new Rect(x, y, windowWidth, windowHeight);
+        drawSpaceRect = new RectInt(SIDE_PADDING, TOP_PADDING, windowWidth - 2 * SIDE_PADDING, windowHeight - TOP_PADDING - SIDE_PADDING);
+        chartRenderer = new ChartRenderer(new RectInt(drawSpaceRect.x, drawSpaceRect.y + 28, drawSpaceRect.width, drawSpaceRect.height - 28));
     }
 
-    private void OnGUI() {
-        float time = (float) (beatmapPlayer._activeSpeedAdjustment * beatmapPlayer.FmodTimeCapsule.Time + beatmapPlayer._musicInitialSkippedTimeInSeconds);
-        var beatData = renderData.BeatData;
-        var notes = renderData.Notes;
+    public void Render(ChartRenderParams chartRenderParams) {
+        windowRect = GUI.Window(0, windowRect, _ => DrawWindow(chartRenderParams), "Practice Plus");
 
-        while (beatData.GetTimeFromBeat(firstBeatIndex) < time - 0.1f)
-            firstBeatIndex++;
+        var position = Vector2Int.FloorToInt(windowRect.position);
 
-        while (firstNoteIndex < notes.Count && notes[firstNoteIndex].EndTime < time)
-            firstNoteIndex++;
+        if (position.x != Plugin.WindowPositionX.Value)
+            Plugin.WindowPositionX.Value = position.x;
 
-        if (visible)
-            chartRenderer.Render(renderData, new RenderParams(time, firstBeatIndex, firstNoteIndex));
+        if (position.y != Plugin.WindowPositionY.Value)
+            Plugin.WindowPositionY.Value = position.y;
     }
 
-    public void Init(BeatmapPlayer beatmapPlayer, RenderData renderData, ChartRenderer chartRenderer) {
-        this.beatmapPlayer = beatmapPlayer;
-        this.renderData = renderData;
-        this.chartRenderer = chartRenderer;
-        firstBeatIndex = 1;
-        firstNoteIndex = 0;
-        enabled = true;
+    private void DrawWindow(ChartRenderParams chartRenderParams) {
+        GUI.Label(new Rect(drawSpaceRect.x, drawSpaceRect.y, 100f, 20f), "Starting Vibe:");
+        StartingVibe = GUI.Toolbar(new Rect(drawSpaceRect.xMax - 100f, drawSpaceRect.y, 100f, 20f), StartingVibe, STARTING_VIBE_OPTIONS);
+        chartRenderer.Render(chartRenderParams);
+        GUI.DragWindow();
     }
 }
