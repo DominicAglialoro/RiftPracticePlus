@@ -5,11 +5,17 @@ namespace RiftPracticePlus;
 
 public class ChartRenderData {
     public readonly List<Note> Notes;
+    public readonly List<Note> VibeRanges;
     public readonly BeatData BeatData;
 
-    public ChartRenderData(CaptureResult captureResult) {
-        Notes = new List<Note>();
+    public ChartRenderData(List<Note> notes, List<Note> vibeRanges, BeatData beatData) {
+        Notes = notes;
+        VibeRanges = vibeRanges;
+        BeatData = beatData;
+    }
 
+    public static ChartRenderData CreateFromCaptureResult(CaptureResult captureResult) {
+        var notes = new List<Note>();
         var riftEvents = captureResult.RiftEvents;
 
         for (int i = 0; i < riftEvents.Count; i++) {
@@ -22,7 +28,7 @@ public class ChartRenderData {
             int column = riftEvent.Column;
 
             if (riftEvent.EnemyType != EnemyType.Wyrm) {
-                Notes.Add(new Note(startTime, startTime, column));
+                notes.Add(new Note(startTime, startTime, column));
 
                 continue;
             }
@@ -40,9 +46,13 @@ public class ChartRenderData {
                 break;
             }
 
-            Notes.Add(new Note(startTime, endTime, column));
+            notes.Add(new Note(startTime, endTime, column));
         }
 
-        BeatData = captureResult.BeatData;
+        notes.Sort();
+
+        var vibeRanges = Solver.Solve(captureResult);
+
+        return new ChartRenderData(notes, vibeRanges, captureResult.BeatData);
     }
 }

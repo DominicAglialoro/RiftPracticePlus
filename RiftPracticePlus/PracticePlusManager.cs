@@ -1,12 +1,19 @@
-﻿using Shared;
+﻿using System;
+using System.IO;
+using RhythmRift;
+using RiftEventCapture.Common;
+using Shared;
 using Shared.RhythmEngine;
 using UnityEngine;
+using Difficulty = Shared.Difficulty;
 
 namespace RiftPracticePlus;
 
 public class PracticePlusManager : MonoBehaviour {
     private const float HIDE_CURSOR_AFTER_TIME = 2f;
 
+    private string currentChartName = string.Empty;
+    private Difficulty currentChartDifficulty = Difficulty.None;
     private BeatmapPlayer beatmapPlayer;
     private ChartRenderData chartRenderData;
     private PracticePlusWindow practicePlusWindow;
@@ -47,12 +54,46 @@ public class PracticePlusManager : MonoBehaviour {
             practicePlusWindow.Render(new ChartRenderParams(time, firstBeatIndex, firstNoteIndex, chartRenderData));
     }
 
-    public void Init(BeatmapPlayer beatmapPlayer, ChartRenderData chartRenderData, PracticePlusWindow practicePlusWindow) {
-        this.beatmapPlayer = beatmapPlayer;
-        this.chartRenderData = chartRenderData;
+    public void Init(RRStageController rrStageController, PracticePlusWindow practicePlusWindow) {
+        beatmapPlayer = rrStageController.BeatmapPlayer;
         this.practicePlusWindow = practicePlusWindow;
         firstBeatIndex = 1;
         firstNoteIndex = 0;
         enabled = true;
+
+        for (int i = 1; i <= practicePlusWindow.StartingVibe; i++) {
+            rrStageController._currentVibePower = Math.Min(i * rrStageController._vibeChainCompletePowerAdditive, rrStageController._maxVibePower);
+            rrStageController.UpdateUI();
+        }
+
+        var stageContextInfo = rrStageController._stageFlowUiController._stageContextInfo;
+        string chartName = stageContextInfo.StageDisplayName;
+        var chartDifficulty = stageContextInfo.StageDifficulty;
+
+        if (chartName == currentChartName && chartDifficulty == currentChartDifficulty)
+            return;
+
+        currentChartName = chartName;
+        currentChartDifficulty = chartDifficulty;
+
+        string directory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "RiftEventCapture", "GoldenLute");
+
+        if (!Directory.Exists(directory)) {
+            Plugin.Logger.LogInfo("No event capture directory found");
+            chartRenderData = null;
+
+            return;
+        }
+
+        string path = Path.Combine(directory, $"{stageContextInfo.StageDisplayName}_{stageContextInfo.StageDifficulty}.bin");
+
+        if (!File.Exists(path)) {
+            Plugin.Logger.LogInfo("No event capture found for this chart");
+            chartRenderData = null;
+
+            return;
+        }
+
+        chartRenderData = ChartRenderData.CreateFromCaptureResult(CaptureResult.LoadFromFile(path));
     }
 }

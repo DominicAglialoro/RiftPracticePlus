@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 namespace RiftPracticePlus;
 
@@ -9,6 +10,7 @@ public class ChartRenderer {
     private static readonly Color NOTE_COLOR = Color.white;
     private static readonly Color BEAT_GRID_COLOR = new(0.5f, 0.5f, 0.5f, 0.75f);
     private static readonly Color JUDGMENT_LINE_COLOR = Color.cyan;
+    private static readonly Color VIBE_ACTIVATION_COLOR = new(1f, 1f, 0f, 0.5f);
 
     private readonly RectInt rect;
     private readonly Texture2D whiteTexture;
@@ -24,21 +26,43 @@ public class ChartRenderer {
 
     public void Render(ChartRenderParams chartRenderParams) {
         var chartRenderData = chartRenderParams.ChartRenderData;
+
+        if (chartRenderData == null)
+            return;
+
         float time = chartRenderParams.Time;
 
         DrawRect(0, 0, rect.width, rect.height, BACKING_COLOR);
+
+        var vibeRanges = chartRenderData.VibeRanges;
+        float maxTime = time + TOP_TIME;
+        float minTime = time + BOTTOM_TIME;
+
+        foreach (var vibeRange in vibeRanges) {
+            if (vibeRange.StartTime > maxTime)
+                break;
+
+            if (vibeRange.EndTime < minTime)
+                continue;
+
+            int startY = TimeToY(vibeRange.StartTime - time);
+            int endY = TimeToY(vibeRange.EndTime - time);
+
+            DrawRect(0, endY, rect.width, Math.Max(1, startY - endY), VIBE_ACTIVATION_COLOR);
+        }
 
         var beatData = chartRenderData.BeatData;
 
         for (int i = chartRenderParams.FirstBeatIndex;; i++) {
             double beatTime = beatData.GetTimeFromBeat(i);
-            float timeDiff = (float) beatTime - time;
 
-            if (timeDiff < BOTTOM_TIME)
+            if (beatTime > maxTime)
+                break;
+
+            if (beatTime < minTime)
                 continue;
 
-            if (timeDiff > TOP_TIME)
-                break;
+            float timeDiff = (float) beatTime - time;
 
             DrawRect(0, TimeToY(timeDiff), rect.width, 1, BEAT_GRID_COLOR);
         }
@@ -46,7 +70,6 @@ public class ChartRenderer {
         DrawRect(0, TimeToY(0f), rect.width, 1, JUDGMENT_LINE_COLOR);
 
         var notes = chartRenderData.Notes;
-        float maxTime = time + TOP_TIME;
 
         for (int i = chartRenderParams.FirstNoteIndex; i < notes.Count; i++) {
             var note = notes[i];

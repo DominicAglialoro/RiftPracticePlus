@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections;
-using System.IO;
 using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Logging;
 using RhythmRift;
-using RiftEventCapture.Common;
-using Shared.Pins;
 using Shared.SceneLoading.Payloads;
 using UnityEngine;
 
@@ -40,45 +37,12 @@ public class Plugin : BaseUnityPlugin {
         if (rrStageController._stageScenePayload is not RhythmRiftScenePayload payload || !payload.IsPracticeMode)
             return playStageIntro(rrStageController);
 
-        var stageContextInfo = rrStageController._stageFlowUiController._stageContextInfo;
-
-        var sessionInfo = new SessionInfo(
-            stageContextInfo.StageDisplayName,
-            payload.GetLevelId(),
-            Util.GameDifficultyToCommonDifficulty(stageContextInfo.StageDifficulty),
-            (string[]) PinsController.GetActivePins().Clone());
-
-        string name = $"{sessionInfo.ChartName}_{sessionInfo.ChartDifficulty}";
-        string directory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "RiftEventCapture", "GoldenLute");
-
-        if (!Directory.Exists(directory)) {
-            Logger.LogInfo("No event capture directory found");
-
-            return playStageIntro(rrStageController);
-        }
-
-        string path = Path.Combine(directory, $"{name}.bin");
-
-        if (!File.Exists(path)) {
-            Logger.LogInfo("No event capture found for this chart");
-
-            return playStageIntro(rrStageController);
-        }
-
-        var captureResult = CaptureResult.LoadFromFile(path);
         var practicePlusManager = FindObjectOfType<PracticePlusManager>();
 
         if (practicePlusManager == null)
             practicePlusManager = new GameObject("Practice Plus Manager", typeof(PracticePlusManager)).GetComponent<PracticePlusManager>();
 
-        practicePlusManager.Init(rrStageController.BeatmapPlayer, new ChartRenderData(captureResult), practicePlusWindow);
-
-        for (int i = 1; i <= practicePlusWindow.StartingVibe; i++) {
-            rrStageController._currentVibePower = Math.Min(i * rrStageController._vibeChainCompletePowerAdditive, rrStageController._maxVibePower);
-            rrStageController.UpdateUI();
-        }
-
-        Logger.LogInfo($"Begin playing {rrStageController._stageFlowUiController._stageContextInfo.StageDisplayName}");
+        practicePlusManager.Init(rrStageController, practicePlusWindow);
 
         return playStageIntro(rrStageController);
     }
