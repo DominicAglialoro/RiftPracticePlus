@@ -9,7 +9,7 @@ using UnityEngine;
 
 namespace RiftPracticePlus;
 
-[BepInPlugin("programmatic.riftPracticePlus", "RiftPracticePlus", "1.1.0.0")]
+[BepInPlugin("programmatic.riftPracticePlus", "RiftPracticePlus", "1.2.0.0")]
 public class Plugin : BaseUnityPlugin {
     private const int WINDOW_WIDTH = 200;
     private const int WINDOW_HEIGHT = 800;

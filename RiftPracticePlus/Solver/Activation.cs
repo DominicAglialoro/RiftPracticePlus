@@ -3,17 +3,19 @@
 namespace RiftPracticePlus;
 
 public class Activation : IComparable<Activation> {
+    public double MaxStartTime;
+    public int Score;
+    public int MaxValue;
+    public Activation[] BestNextActivations;
+
     public readonly double MinStartTime;
-    public readonly double MaxStartTime;
     public readonly int StartIndex;
     public readonly int EndIndex;
-    public readonly int Score;
     public readonly int VibesUsed;
 
-    public Activation(double minStartTime, double maxStartTime, int startIndex, int endIndex, int score, int vibesUsed) {
+    public Activation(double minStartTime, int startIndex, int endIndex, int vibesUsed) {
         MinStartTime = minStartTime;
-        MaxStartTime = maxStartTime;
-        Score = score;
+        MaxStartTime = double.MaxValue;
         VibesUsed = vibesUsed;
         StartIndex = startIndex;
         EndIndex = endIndex;

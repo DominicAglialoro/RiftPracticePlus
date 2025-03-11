@@ -4,11 +4,11 @@ using RiftEventCapture.Common;
 namespace RiftPracticePlus;
 
 public class ChartRenderData {
-    public readonly List<Note> Notes;
-    public readonly List<Note> VibeRanges;
+    public readonly Note[] Notes;
+    public readonly Note[] VibeRanges;
     public readonly BeatData BeatData;
 
-    public ChartRenderData(List<Note> notes, List<Note> vibeRanges, BeatData beatData) {
+    public ChartRenderData(Note[] notes, Note[] vibeRanges, BeatData beatData) {
         Notes = notes;
         VibeRanges = vibeRanges;
         BeatData = beatData;
@@ -51,8 +51,6 @@ public class ChartRenderData {
 
         notes.Sort();
 
-        var vibeRanges = Solver.Solve(captureResult);
-
-        return new ChartRenderData(notes, vibeRanges, captureResult.BeatData);
+        return new ChartRenderData(notes.ToArray(), Solver.Solve(captureResult), captureResult.BeatData);
     }
 }

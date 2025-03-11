@@ -47,7 +47,7 @@ public class PracticePlusManager : MonoBehaviour {
         while (beatData.GetTimeFromBeat(firstBeatIndex) < time - 0.1f)
             firstBeatIndex++;
 
-        while (firstNoteIndex < notes.Count && notes[firstNoteIndex].EndTime < time)
+        while (firstNoteIndex < notes.Length && notes[firstNoteIndex].EndTime < time)
             firstNoteIndex++;
 
         if (Plugin.ShowPracticePlusWindow.Value)

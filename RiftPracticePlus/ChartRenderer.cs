@@ -10,7 +10,8 @@ public class ChartRenderer {
     private static readonly Color NOTE_COLOR = Color.white;
     private static readonly Color BEAT_GRID_COLOR = new(0.5f, 0.5f, 0.5f, 0.75f);
     private static readonly Color JUDGMENT_LINE_COLOR = Color.cyan;
-    private static readonly Color VIBE_ACTIVATION_COLOR = new(1f, 1f, 0f, 0.5f);
+    private static readonly Color VIBE_SINGLE_ACTIVATION_COLOR = new(1f, 1f, 0f, 0.5f);
+    private static readonly Color VIBE_DOUBLE_ACTIVATION_COLOR = new(0.5f, 1f, 1f, 0.5f);
 
     private readonly RectInt rect;
     private readonly Texture2D whiteTexture;
@@ -48,7 +49,7 @@ public class ChartRenderer {
             int startY = TimeToY(vibeRange.StartTime - time);
             int endY = TimeToY(vibeRange.EndTime - time);
 
-            DrawRect(0, endY, rect.width, Math.Max(1, startY - endY), VIBE_ACTIVATION_COLOR);
+            DrawRect(0, endY, rect.width, Math.Max(1, startY - endY), vibeRange.Column == 1 ? VIBE_SINGLE_ACTIVATION_COLOR : VIBE_DOUBLE_ACTIVATION_COLOR);
         }
 
         var beatData = chartRenderData.BeatData;
@@ -71,7 +72,7 @@ public class ChartRenderer {
 
         var notes = chartRenderData.Notes;
 
-        for (int i = chartRenderParams.FirstNoteIndex; i < notes.Count; i++) {
+        for (int i = chartRenderParams.FirstNoteIndex; i < notes.Length; i++) {
             var note = notes[i];
 
             if (note.StartTime > maxTime)
