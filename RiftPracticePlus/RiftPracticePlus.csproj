@@ -88,6 +88,7 @@
         <Compile Include="ChartRenderParams.cs" />
         <Compile Include="Solver\Activation.cs" />
         <Compile Include="Solver\ActivationSpan.cs" />
+        <Compile Include="Solver\BestNextActivations.cs" />
         <Compile Include="Solver\Hit.cs" />
         <Compile Include="Solver\Solver.cs" />
         <Compile Include="Solver\SolverData.cs" />

@@ -1,8 +1,6 @@
-﻿using System;
+﻿namespace RiftPracticePlus;
 
-namespace RiftPracticePlus;
-
-public readonly struct ActivationSpan : IComparable<ActivationSpan> {
+public readonly struct ActivationSpan {
     public readonly double StartTime;
     public readonly int StartIndex;
     public readonly int EndIndex;
@@ -12,6 +10,4 @@ public readonly struct ActivationSpan : IComparable<ActivationSpan> {
         StartIndex = startIndex;
         EndIndex = endIndex;
     }
-
-    public int CompareTo(ActivationSpan other) => StartTime.CompareTo(other.StartTime);
 }
