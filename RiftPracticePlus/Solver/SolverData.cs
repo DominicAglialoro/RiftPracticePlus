@@ -83,10 +83,10 @@ public class SolverData {
 
     public double GetHitTime(int index) {
         if (index < 0)
-            return double.MinValue;
+            return double.NegativeInfinity;
 
         if (index >= Hits.Count)
-            return double.MaxValue;
+            return double.PositiveInfinity;
 
         return Hits[index].Time;
     }
@@ -109,14 +109,13 @@ public class SolverData {
         int min = 0;
         int max = Hits.Count;
 
-        while (max > min) {
+        while (max >= min) {
             int mid = (min + max) / 2;
-            double midTime = Hits[mid].Time;
 
-            if (endTime > midTime)
-                min = mid + 1;
+            if (Hits[mid].Time > endTime)
+                max = mid - 1;
             else
-                max = mid;
+                min = mid + 1;
         }
 
         return min;

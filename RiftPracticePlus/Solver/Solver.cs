@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using RiftEventCapture.Common;
 
 namespace RiftPracticePlus;
@@ -114,7 +113,7 @@ public static class Solver {
         currentTime = Math.Max(currentTime, data.GetHitTime(endIndex - 2));
 
         double vibeNeeded = 0d;
-        double startTime = double.MaxValue;
+        double startTime = double.PositiveInfinity;
         int previousVibeIndex = data.GetPreviousVibe(data.GetFirstIndexAfter(currentTime));
 
         do {
@@ -239,7 +238,7 @@ public static class Solver {
         foreach (int index in optimalSingleVibeActivations) {
             vibeRanges[i] = new Note(
                 (float) singleVibeActivations[index].MinStartTime,
-                index < singleVibeActivations.Count - 1 ? (float) singleVibeActivations[index + 1].MinStartTime : float.MaxValue,
+                index < singleVibeActivations.Count - 1 ? (float) singleVibeActivations[index + 1].MinStartTime : float.PositiveInfinity,
                 1);
             i++;
         }
@@ -247,7 +246,7 @@ public static class Solver {
         foreach (int index in optimalDoubleVibeActivations) {
             vibeRanges[i] = new Note(
                 (float) doubleVibeActivations[index].MinStartTime,
-                index < doubleVibeActivations.Count - 1 ? (float) doubleVibeActivations[index + 1].MinStartTime : float.MaxValue,
+                index < doubleVibeActivations.Count - 1 ? (float) doubleVibeActivations[index + 1].MinStartTime : float.PositiveInfinity,
                 2);
             i++;
         }
