@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using RiftEventCapture.Common;
+using RiftVibeSolver.Common;
 
 namespace RiftPracticePlus;
 
@@ -51,6 +53,42 @@ public class ChartRenderData {
 
         notes.Sort();
 
-        return new ChartRenderData(notes.ToArray(), Solver.Solve(captureResult), captureResult.BeatData);
+        var beatData = captureResult.BeatData;
+        var hits = Hit.MergeHits(GetHitsFromCaptureResult(captureResult));
+        var result = Solver.Solve(new SolverData(beatData.BPM, beatData.BeatDivisions, new List<double>(beatData.BeatTimings), hits));
+        var singleVibeActivations = result.BestSingleVibeActivations;
+        var doubleVibeActivations = result.BestDoubleVibeActivations;
+        var allActivations = new Note[singleVibeActivations.Count + doubleVibeActivations.Count];
+        int index = 0;
+
+        foreach (var activation in singleVibeActivations) {
+            allActivations[index] = new Note((float) activation.MinStartTime, (float) activation.MaxStartTime, 1);
+            index++;
+        }
+
+        foreach (var activation in doubleVibeActivations) {
+            allActivations[index] = new Note((float) activation.MinStartTime, (float) activation.MaxStartTime, 2);
+            index++;
+        }
+
+        Array.Sort(allActivations);
+
+        return new ChartRenderData(notes.ToArray(), allActivations, captureResult.BeatData);
+    }
+
+    private static IEnumerable<Hit> GetHitsFromCaptureResult(CaptureResult captureResult) {
+        foreach (var riftEvent in captureResult.RiftEvents) {
+            if (riftEvent.EventType is not (EventType.EnemyHit or EventType.VibeGained))
+                continue;
+
+            switch (riftEvent.EventType) {
+                case EventType.EnemyHit:
+                    yield return new Hit(riftEvent.TargetTime.Time, riftEvent.BaseMultiplier * riftEvent.BaseScore, false);
+                    break;
+                case EventType.VibeGained:
+                    yield return new Hit(riftEvent.TargetTime.Time, 0, true);
+                    break;
+            }
+        }
     }
 }

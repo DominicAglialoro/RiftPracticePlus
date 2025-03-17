@@ -58,6 +58,9 @@
         <Reference Include="RiftEventCapture.Common">
           <HintPath>C:\Program Files (x86)\Steam\steamapps\common\RiftOfTheNecroDancerOSTVolume1\BepInEx\plugins\RiftEventCapture\RiftEventCapture.Common.dll</HintPath>
         </Reference>
+        <Reference Include="RiftVibeSolver.Common">
+          <HintPath>..\..\RiftVibeSolver\RiftVibeSolver.Common\bin\Release\RiftVibeSolver.Common.dll</HintPath>
+        </Reference>
         <Reference Include="System" />
         <Reference Include="System.Core" />
         <Reference Include="UnityEngine">
@@ -86,12 +89,6 @@
         <Compile Include="Properties\AssemblyInfo.cs" />
         <Compile Include="ChartRenderData.cs" />
         <Compile Include="ChartRenderParams.cs" />
-        <Compile Include="Solver\Activation.cs" />
-        <Compile Include="Solver\ActivationSpan.cs" />
-        <Compile Include="Solver\BestNextActivations.cs" />
-        <Compile Include="Solver\Hit.cs" />
-        <Compile Include="Solver\Solver.cs" />
-        <Compile Include="Solver\SolverData.cs" />
         <Compile Include="Util.cs" />
     </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
