@@ -109,7 +109,7 @@ public class SolverData {
         int min = 0;
         int max = Hits.Count;
 
-        while (max >= min) {
+        while (max >= min && min < Hits.Count) {
             int mid = (min + max) / 2;
 
             if (Hits[mid].Time > endTime)
