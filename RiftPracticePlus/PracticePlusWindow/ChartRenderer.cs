@@ -10,7 +10,7 @@ public class ChartRenderer {
     private static readonly Color NOTE_COLOR = Color.white;
     private static readonly Color BEAT_GRID_COLOR = new(0.5f, 0.5f, 0.5f, 0.75f);
     private static readonly Color JUDGMENT_LINE_COLOR = Color.cyan;
-    private static readonly Color VIBE_SINGLE_ACTIVATION_COLOR = new(1f, 1f, 0f, 0.5f);
+    private static readonly Color VIBE_SINGLE_ACTIVATION_COLOR = new(0.5f, 1f, 0f, 0.5f);
     private static readonly Color VIBE_DOUBLE_ACTIVATION_COLOR = new(0.5f, 1f, 1f, 0.5f);
 
     private readonly RectInt rect;
@@ -26,33 +26,32 @@ public class ChartRenderer {
     }
 
     public void Render(ChartRenderParams chartRenderParams) {
-        var chartRenderData = chartRenderParams.ChartRenderData;
+        var renderData = chartRenderParams.RenderData;
 
-        if (chartRenderData == null)
+        if (renderData == null)
             return;
 
         float time = chartRenderParams.Time;
 
         DrawRect(0, 0, rect.width, rect.height, BACKING_COLOR);
 
-        var vibeRanges = chartRenderData.VibeRanges;
         float maxTime = time + TOP_TIME;
         float minTime = time + BOTTOM_TIME;
 
-        foreach (var vibeRange in vibeRanges) {
-            if (vibeRange.StartTime > maxTime)
+        foreach (var activation in renderData.Activations) {
+            if (activation.StartTime > maxTime)
                 break;
 
-            if (vibeRange.EndTime < minTime)
+            if (activation.EndTime < minTime)
                 continue;
 
-            int startY = TimeToY(vibeRange.StartTime - time);
-            int endY = TimeToY(vibeRange.EndTime - time);
+            int startY = TimeToY(activation.StartTime - time);
+            int endY = TimeToY(activation.EndTime - time);
 
-            DrawRect(0, endY, rect.width, Math.Max(1, startY - endY), vibeRange.Column == 1 ? VIBE_SINGLE_ACTIVATION_COLOR : VIBE_DOUBLE_ACTIVATION_COLOR);
+            DrawRect(0, endY, rect.width, Math.Max(1, startY - endY), activation.IsDouble ? VIBE_DOUBLE_ACTIVATION_COLOR : VIBE_SINGLE_ACTIVATION_COLOR);
         }
 
-        var beatData = chartRenderData.BeatData;
+        var beatData = renderData.BeatData;
 
         for (int i = chartRenderParams.FirstBeatIndex;; i++) {
             double beatTime = beatData.GetTimeFromBeat(i);
@@ -70,26 +69,26 @@ public class ChartRenderer {
 
         DrawRect(0, TimeToY(0f), rect.width, 1, JUDGMENT_LINE_COLOR);
 
-        var notes = chartRenderData.Notes;
+        var hits = renderData.Hits;
 
-        for (int i = chartRenderParams.FirstNoteIndex; i < notes.Length; i++) {
-            var note = notes[i];
+        for (int i = chartRenderParams.FirstNoteIndex; i < hits.Length; i++) {
+            var hit = hits[i];
 
-            if (note.StartTime > maxTime)
+            if (hit.StartTime > maxTime)
                 break;
 
-            if (note.EndTime < time)
+            if (hit.EndTime < time)
                 continue;
 
-            float x = note.Column / 3f;
-            int startY = TimeToY(Mathf.Clamp(note.StartTime - time, 0f, TOP_TIME));
+            float x = hit.Column / 3f;
+            int startY = TimeToY(Mathf.Clamp(hit.StartTime - time, 0f, TOP_TIME));
 
             DrawRect((int) (x * rect.width) + 2, startY - 1, rect.width / 3 - 4, 3, NOTE_COLOR);
 
-            if (note.EndTime <= note.StartTime)
+            if (hit.EndTime <= hit.StartTime)
                 continue;
 
-            int endY = TimeToY(note.EndTime - time);
+            int endY = TimeToY((float) hit.EndTime - time);
 
             DrawRect((int) (x * rect.width + rect.width / 6f) - 1, endY, 3, startY - endY, NOTE_COLOR);
         }

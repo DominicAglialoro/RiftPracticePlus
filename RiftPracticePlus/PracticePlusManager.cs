@@ -1,25 +1,91 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using RhythmRift;
-using RiftEventCapture.Common;
+using RiftCommon;
 using Shared;
 using Shared.RhythmEngine;
+using Shared.SceneLoading.Payloads;
 using UnityEngine;
-using Difficulty = Shared.Difficulty;
 
 namespace RiftPracticePlus;
 
 public class PracticePlusManager : MonoBehaviour {
     private const float HIDE_CURSOR_AFTER_TIME = 2f;
 
-    private string currentChartName = string.Empty;
-    private Difficulty currentChartDifficulty = Difficulty.None;
+    private static bool TryGetChartData(string fileName, out ChartData chartData) {
+        string directory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "RiftPracticePlus");
+
+        if (!Directory.Exists(directory)) {
+            Plugin.Logger.LogInfo("No chart data directory found");
+            chartData = null;
+
+            return false;
+        }
+
+        string path = Path.Combine(directory, fileName);
+
+        if (!File.Exists(path)) {
+            Plugin.Logger.LogInfo("No chart data found for this chart");
+            chartData = null;
+
+            return false;
+        }
+
+        chartData = ChartData.LoadFromFile(path);
+
+        return true;
+    }
+
+    private static bool TryGetFallbackChartData(string fileName, RhythmRiftScenePayload payload, out ChartData chartData) {
+        string directory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "RiftEventCapture", "GoldenLute");
+
+        if (!Directory.Exists(directory)) {
+            Plugin.Logger.LogInfo("No event capture directory found");
+            chartData = null;
+
+            return false;
+        }
+
+        string path = Path.Combine(directory, fileName);
+
+        if (!File.Exists(path)) {
+            Plugin.Logger.LogInfo($"No event capture found for chart {fileName}");
+            chartData = null;
+
+            return false;
+        }
+
+        var captureResult = CaptureResult.LoadFromFile(path);
+        var hits = captureResult.GetHits();
+        var vibeData = Solver.Solve(new SolverData(captureResult.BeatData, hits));
+
+        chartData = new ChartData(
+            payload.TrackName,
+            payload.GetLevelId(),
+            (RiftCommon.Difficulty) payload.TrackDifficulty.Difficulty,
+            !string.IsNullOrWhiteSpace(payload.TrackDifficulty.BeatmapFilePath),
+            captureResult.BeatData,
+            hits,
+            vibeData);
+
+        directory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "RiftPracticePlus");
+        Directory.CreateDirectory(directory);
+        path = Path.Combine(directory, $"{Util.CleanFileName(Util.GetIdentifierFromPayload(payload))}.bin");
+        chartData.SaveToFile(path);
+        Plugin.Logger.LogInfo($"Saved chart data to {path}");
+
+        return true;
+    }
+
+    private string currentChartIdentifier;
     private BeatmapPlayer beatmapPlayer;
     private ChartRenderData chartRenderData;
     private PracticePlusWindow practicePlusWindow;
     private float mouseMovedAt;
+    private float skipTime;
     private int firstBeatIndex = 1;
-    private int firstNoteIndex;
+    private int firstHitIndex;
 
     private void Update() {
         if (Input.GetKeyDown(KeyCode.P)) {
@@ -40,25 +106,33 @@ public class PracticePlusManager : MonoBehaviour {
     }
 
     private void OnGUI() {
-        float time = (float) (beatmapPlayer._activeSpeedAdjustment * beatmapPlayer.FmodTimeCapsule.Time + beatmapPlayer._musicInitialSkippedTimeInSeconds);
-        var beatData = chartRenderData.BeatData;
-        var notes = chartRenderData.Notes;
+        float time = (float) (beatmapPlayer._activeSpeedAdjustment * beatmapPlayer.FmodTimeCapsule.Time + skipTime);
 
-        while (beatData.GetTimeFromBeat(firstBeatIndex) < time - 0.1f)
-            firstBeatIndex++;
+        if (chartRenderData != null) {
+            var beatData = chartRenderData.BeatData;
 
-        while (firstNoteIndex < notes.Length && notes[firstNoteIndex].EndTime < time)
-            firstNoteIndex++;
+            while (beatData.GetTimeFromBeat(firstBeatIndex) < time - 0.1f)
+                firstBeatIndex++;
+
+            var hits = chartRenderData.Hits;
+
+            while (firstHitIndex < hits.Length && hits[firstHitIndex].EndTime < time)
+                firstHitIndex++;
+        }
 
         if (Plugin.ShowPracticePlusWindow.Value)
-            practicePlusWindow.Render(new ChartRenderParams(time, firstBeatIndex, firstNoteIndex, chartRenderData));
+            practicePlusWindow.Render(new ChartRenderParams(time, firstBeatIndex, firstHitIndex, chartRenderData));
     }
 
-    public void Init(RRStageController rrStageController, PracticePlusWindow practicePlusWindow) {
+    public void Init(RRStageController rrStageController, RhythmRiftScenePayload payload, PracticePlusWindow practicePlusWindow) {
         beatmapPlayer = rrStageController.BeatmapPlayer;
         this.practicePlusWindow = practicePlusWindow;
+        skipTime = Mathf.Max(0f, rrStageController.ComputeSkipTime(
+            rrStageController._practiceModeStartBeatmapIndex,
+            rrStageController._practiceModeStartBeatNumber,
+            rrStageController._practiceModeTotalBeatsSkippedBeforeStartBeatmap));
         firstBeatIndex = 1;
-        firstNoteIndex = 0;
+        firstHitIndex = 0;
         enabled = true;
 
         for (int i = 1; i <= practicePlusWindow.StartingVibe; i++) {
@@ -66,34 +140,41 @@ public class PracticePlusManager : MonoBehaviour {
             rrStageController.UpdateUI();
         }
 
-        var stageContextInfo = rrStageController._stageFlowUiController._stageContextInfo;
-        string chartName = stageContextInfo.StageDisplayName;
-        var chartDifficulty = stageContextInfo.StageDifficulty;
+        string chartIdentifier = Util.GetIdentifierFromPayload(payload);
 
-        if (chartName == currentChartName && chartDifficulty == currentChartDifficulty)
+        if (chartIdentifier == currentChartIdentifier)
             return;
 
-        currentChartName = chartName;
-        currentChartDifficulty = chartDifficulty;
+        currentChartIdentifier = chartIdentifier;
 
-        string directory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "RiftEventCapture", "GoldenLute");
-
-        if (!Directory.Exists(directory)) {
-            Plugin.Logger.LogInfo("No event capture directory found");
+        if (!TryGetChartData($"{chartIdentifier}.bin", out var chartData) && !TryGetFallbackChartData($"{payload.TrackMetadata.TrackName}_{payload.TrackDifficulty.Difficulty}.bin", payload, out chartData)) {
             chartRenderData = null;
 
             return;
         }
 
-        string path = Path.Combine(directory, $"{stageContextInfo.StageDisplayName}_{stageContextInfo.StageDifficulty}.bin");
+        var hits = new List<ChartRenderHit>();
 
-        if (!File.Exists(path)) {
-            Plugin.Logger.LogInfo("No event capture found for this chart");
-            chartRenderData = null;
-
-            return;
+        foreach (var hit in chartData.Hits) {
+            if (hit.EnemyType != EnemyType.None)
+                hits.Add(new ChartRenderHit((float) hit.Time, (float) hit.EndTime, hit.Column));
         }
 
-        chartRenderData = ChartRenderData.CreateFromCaptureResult(CaptureResult.LoadFromFile(path));
+        hits.Sort();
+
+        var activations = new List<ChartRenderActivation>();
+
+        foreach (var activation in chartData.VibeData.SingleVibeActivations) {
+            if (activation.IsOptimal)
+                activations.Add(new ChartRenderActivation((float) activation.MinStartTime, (float) activation.MaxStartTime, false));
+        }
+
+        foreach (var activation in chartData.VibeData.DoubleVibeActivations) {
+            if (activation.IsOptimal)
+                activations.Add(new ChartRenderActivation((float) activation.MinStartTime, (float) activation.MaxStartTime, true));
+        }
+
+        activations.Sort();
+        chartRenderData = new ChartRenderData(chartData.BeatData, hits.ToArray(), activations.ToArray());
     }
 }

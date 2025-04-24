@@ -2,6 +2,10 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RiftPracticePlus", "RiftPracticePlus\RiftPracticePlus.csproj", "{52FA1801-0642-4F7E-831B-3023AE8A784F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RiftCommon", "RiftCommon\RiftCommon.csproj", "{D051C966-D2A0-400F-9CE3-1791669790C3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RiftPracticePlus.Visualizer", "RiftPracticePlus.Visualizer\RiftPracticePlus.Visualizer.csproj", "{1BDA922C-2C83-4082-ADE6-0911E815BC12}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +16,13 @@ Global
 		{52FA1801-0642-4F7E-831B-3023AE8A784F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{52FA1801-0642-4F7E-831B-3023AE8A784F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{52FA1801-0642-4F7E-831B-3023AE8A784F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D051C966-D2A0-400F-9CE3-1791669790C3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D051C966-D2A0-400F-9CE3-1791669790C3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D051C966-D2A0-400F-9CE3-1791669790C3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D051C966-D2A0-400F-9CE3-1791669790C3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1BDA922C-2C83-4082-ADE6-0911E815BC12}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1BDA922C-2C83-4082-ADE6-0911E815BC12}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1BDA922C-2C83-4082-ADE6-0911E815BC12}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1BDA922C-2C83-4082-ADE6-0911E815BC12}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

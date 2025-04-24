@@ -36,7 +36,7 @@
     </PropertyGroup>
     <ItemGroup>
         <Reference Include="Assembly-CSharp">
-            <HintPath>libs\Assembly-CSharp_publicized.dll</HintPath>
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\RiftOfTheNecroDancerOSTVolume1\RiftOfTheNecroDancer_Data\Managed\publicized_assemblies\Assembly-CSharp_publicized.dll</HintPath>
             <Private>false</Private>
         </Reference>
         <Reference Include="BepInEx">
@@ -55,14 +55,12 @@
             <HintPath>C:\Program Files (x86)\Steam\steamapps\common\RiftOfTheNecroDancerOSTVolume1\BepInEx\core\MonoMod.Utils.dll</HintPath>
             <Private>false</Private>
         </Reference>
-        <Reference Include="RiftEventCapture.Common">
-          <HintPath>C:\Program Files (x86)\Steam\steamapps\common\RiftOfTheNecroDancerOSTVolume1\BepInEx\plugins\RiftEventCapture\RiftEventCapture.Common.dll</HintPath>
-        </Reference>
-        <Reference Include="RiftVibeSolver.Common">
-          <HintPath>..\..\RiftVibeSolver\RiftVibeSolver.Common\bin\Release\RiftVibeSolver.Common.dll</HintPath>
-        </Reference>
         <Reference Include="System" />
         <Reference Include="System.Core" />
+        <Reference Include="Unity.Mathematics">
+          <HintPath>C:\Program Files (x86)\Steam\steamapps\common\RiftOfTheNecroDancerOSTVolume1\RiftOfTheNecroDancer_Data\Managed\Unity.Mathematics.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
         <Reference Include="UnityEngine">
             <HintPath>C:\Program Files (x86)\Steam\steamapps\common\RiftOfTheNecroDancerOSTVolume1\RiftOfTheNecroDancer_Data\Managed\UnityEngine.dll</HintPath>
             <Private>false</Private>
@@ -81,15 +79,34 @@
         </Reference>
     </ItemGroup>
     <ItemGroup>
-        <Compile Include="ChartRenderer.cs" />
-        <Compile Include="PracticePlusWindow.cs" />
-        <Compile Include="Note.cs" />
+        <Compile Include="ChartCaptureManager.cs" />
+        <Compile Include="EventCaptureCompatability\CaptureResult.cs" />
+        <Compile Include="EventCaptureCompatability\EventType.cs" />
+        <Compile Include="EventCaptureCompatability\RiftEvent.cs" />
+        <Compile Include="EventCaptureCompatability\SessionInfo.cs" />
+        <Compile Include="EventCaptureCompatability\Timestamp.cs" />
         <Compile Include="Plugin.cs" />
         <Compile Include="PracticePlusManager.cs" />
+        <Compile Include="PracticePlusWindow\ChartRenderActivation.cs" />
+        <Compile Include="PracticePlusWindow\ChartRenderData.cs" />
+        <Compile Include="PracticePlusWindow\ChartRenderer.cs" />
+        <Compile Include="PracticePlusWindow\ChartRenderHit.cs" />
+        <Compile Include="PracticePlusWindow\ChartRenderParams.cs" />
+        <Compile Include="PracticePlusWindow\PracticePlusWindow.cs" />
         <Compile Include="Properties\AssemblyInfo.cs" />
-        <Compile Include="ChartRenderData.cs" />
-        <Compile Include="ChartRenderParams.cs" />
+        <Compile Include="Solver\ActivationData.cs" />
+        <Compile Include="Solver\ActivationSpan.cs" />
+        <Compile Include="Solver\BestNextActivations.cs" />
+        <Compile Include="Solver\HitGroup.cs" />
+        <Compile Include="Solver\Solver.cs" />
+        <Compile Include="Solver\SolverData.cs" />
         <Compile Include="Util.cs" />
+    </ItemGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\RiftCommon\RiftCommon.csproj">
+        <Project>{d051c966-d2a0-400f-9ce3-1791669790c3}</Project>
+        <Name>RiftCommon</Name>
+      </ProjectReference>
     </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
     <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
