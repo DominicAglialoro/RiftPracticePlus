@@ -19,7 +19,7 @@ namespace RiftPracticePlus;
 
 [BepInPlugin("programmatic.riftPracticePlus", "RiftPracticePlus", PLUGIN_VERSION)]
 public class Plugin : BaseUnityPlugin {
-    public const string PLUGIN_VERSION = "1.3.1";
+    public const string PLUGIN_VERSION = "1.4.0";
 
     private const int WINDOW_WIDTH = 200;
     private const int WINDOW_HEIGHT = 800;
@@ -28,6 +28,7 @@ public class Plugin : BaseUnityPlugin {
     public static ConfigEntry<int> WindowPositionX { get; private set; }
     public static ConfigEntry<int> WindowPositionY { get; private set; }
 
+    public static string AssemblyPath { get; } = Path.GetDirectoryName(typeof(Plugin).Assembly.Location);
     public new static ManualLogSource Logger { get; private set; }
 
     private static PracticePlusWindow practicePlusWindow;
@@ -92,8 +93,8 @@ public class Plugin : BaseUnityPlugin {
 
             practicePlusManager.Init(rrStageController, payload, practicePlusWindow);
         }
-        else if (PinsController.IsPinActive("GoldenLute")) {
-            Logger.LogInfo($"Begin capturing Name: {payload.TrackName}, ID: {payload.GetLevelId()}, Difficulty: {payload.TrackDifficulty.Difficulty}");
+        else if (PinsController.IsPinActive("GoldenLute") && Util.IsPayloadCustom(payload)) {
+            Logger.LogInfo($"Begin capturing Name: {payload.TrackMetadata.TrackName}, ID: {payload.GetLevelId()}, Difficulty: {payload.TrackDifficulty.Difficulty}");
             chartCaptureManager = FindObjectOfType<ChartCaptureManager>();
 
             if (chartCaptureManager == null)

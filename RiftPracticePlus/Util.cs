@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using Mono.Cecil.Cil;
@@ -59,7 +60,18 @@ internal static class Util {
         _ => throw new ArgumentOutOfRangeException(nameof(id), id, null)
     };
 
-    public static string GetIdentifierFromPayload(RhythmRiftScenePayload payload) => $"{payload.TrackMetadata.TrackName}_{payload.GetLevelId()}_{payload.TrackDifficulty.Difficulty}";
+    public static bool IsPayloadCustom (RhythmRiftScenePayload payload) => !string.IsNullOrWhiteSpace(payload.TrackDifficulty.BeatmapFilePath);
 
-    public static string CleanFileName(string fileName) => Regex.Replace(fileName, @"[\0\\\/:*?""<>|.]", "-", RegexOptions.Compiled).Trim();
+    public static string GetChartDataPath(RhythmRiftScenePayload payload) {
+        string directory;
+
+        if (IsPayloadCustom(payload))
+            directory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "RiftPracticePlus");
+        else
+            directory = Path.Combine(Plugin.AssemblyPath, "ChartData");
+
+        return Path.Combine(directory, $"{GetFileNameFromPayload(payload)}.bin");
+    }
+
+    private static string GetFileNameFromPayload(RhythmRiftScenePayload payload) => Regex.Replace($"{payload.TrackMetadata.TrackName}_{payload.GetLevelId()}_{payload.TrackDifficulty.Difficulty}", @"[\0\\\/:*?""<>|.]", "-", RegexOptions.Compiled);
 }

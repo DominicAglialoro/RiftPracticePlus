@@ -27,7 +27,15 @@ public class Visualizer {
         openFileDialog = new OpenFileDialog();
         panel.OnClick += (time, value) => DrawVibePath(time, value > 0.5f ? 1 : 2);
         panel.OnEnter += ShowFileDialog;
-        ShowFileDialog();
+    }
+
+    public void Start() {
+        string[] args = Environment.GetCommandLineArgs();
+
+        if (args.Length < 2)
+            ShowFileDialog();
+        else
+            LoadEvents(args[1]);
     }
 
     private void ShowFileDialog() {
@@ -160,7 +168,6 @@ public class Visualizer {
         double currentTime = startTime;
         double vibeRemaining = vibesUsed * VIBE_LENGTH;
         int startIndex = 0;
-        int score = 0;
 
         while (startIndex < hits.Length && hits[startIndex].Time < startTime)
             startIndex++;
@@ -170,8 +177,6 @@ public class Visualizer {
 
             if (hit.Time > activation.LastHitTime)
                 break;
-
-            score += hit.Score;
 
             if (!hit.GivesVibe)
                 continue;
@@ -183,6 +188,6 @@ public class Visualizer {
 
         segments.Add(new VibePathSegment(currentTime, currentTime + vibeRemaining, vibeRemaining, 0d));
 
-        return new VibePath(startTime, activation.LastHitTime, score, segments);
+        return new VibePath(startTime, activation.LastHitTime, activation.Score, segments);
     }
 }

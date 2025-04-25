@@ -1,6 +1,8 @@
-﻿namespace RiftCommon;
+﻿using System;
 
-public readonly struct Hit {
+namespace RiftCommon;
+
+public readonly struct Hit : IComparable<Hit> {
     public readonly double Time;
     public readonly double Beat;
     public readonly double EndTime;
@@ -19,5 +21,22 @@ public readonly struct Hit {
         Column = column;
         Score = score;
         GivesVibe = givesVibe;
+    }
+
+    public int CompareTo(Hit other) {
+        int timeComparison = Time.CompareTo(other.Time);
+
+        if (timeComparison != 0)
+            return timeComparison;
+
+        if (GivesVibe && other.GivesVibe)
+            return 0;
+
+        int givesVibeComparison = GivesVibe.CompareTo(other.GivesVibe);
+
+        if (givesVibeComparison != 0)
+            return givesVibeComparison;
+
+        return Column.CompareTo(other.Column);
     }
 }

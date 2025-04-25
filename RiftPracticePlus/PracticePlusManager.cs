@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using RhythmRift;
 using RiftCommon;
 using Shared;
@@ -13,18 +15,7 @@ namespace RiftPracticePlus;
 public class PracticePlusManager : MonoBehaviour {
     private const float HIDE_CURSOR_AFTER_TIME = 2f;
 
-    private static bool TryGetChartData(string fileName, out ChartData chartData) {
-        string directory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "RiftPracticePlus");
-
-        if (!Directory.Exists(directory)) {
-            Plugin.Logger.LogInfo("No chart data directory found");
-            chartData = null;
-
-            return false;
-        }
-
-        string path = Path.Combine(directory, fileName);
-
+    private static bool TryGetChartData(string path, out ChartData chartData) {
         if (!File.Exists(path)) {
             Plugin.Logger.LogInfo("No chart data found for this chart");
             chartData = null;
@@ -37,20 +28,11 @@ public class PracticePlusManager : MonoBehaviour {
         return true;
     }
 
-    private static bool TryGetFallbackChartData(string fileName, RhythmRiftScenePayload payload, out ChartData chartData) {
+    private static bool TryGetFallbackChartData(string fromName, string toPath, RhythmRiftScenePayload payload, out ChartData chartData) {
         string directory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "RiftEventCapture", "GoldenLute");
-
-        if (!Directory.Exists(directory)) {
-            Plugin.Logger.LogInfo("No event capture directory found");
-            chartData = null;
-
-            return false;
-        }
-
-        string path = Path.Combine(directory, fileName);
+        string path = Path.Combine(directory, fromName);
 
         if (!File.Exists(path)) {
-            Plugin.Logger.LogInfo($"No event capture found for chart {fileName}");
             chartData = null;
 
             return false;
@@ -64,21 +46,18 @@ public class PracticePlusManager : MonoBehaviour {
             payload.TrackName,
             payload.GetLevelId(),
             (RiftCommon.Difficulty) payload.TrackDifficulty.Difficulty,
-            !string.IsNullOrWhiteSpace(payload.TrackDifficulty.BeatmapFilePath),
+            Util.IsPayloadCustom(payload),
             captureResult.BeatData,
             hits,
             vibeData);
 
-        directory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "RiftPracticePlus");
-        Directory.CreateDirectory(directory);
-        path = Path.Combine(directory, $"{Util.CleanFileName(Util.GetIdentifierFromPayload(payload))}.bin");
-        chartData.SaveToFile(path);
-        Plugin.Logger.LogInfo($"Saved chart data to {path}");
+        chartData.SaveToFile(toPath);
+        Plugin.Logger.LogInfo($"Saved chart data to {toPath}");
 
         return true;
     }
 
-    private string currentChartIdentifier;
+    private string currentChartDataPath;
     private BeatmapPlayer beatmapPlayer;
     private ChartRenderData chartRenderData;
     private PracticePlusWindow practicePlusWindow;
@@ -127,6 +106,7 @@ public class PracticePlusManager : MonoBehaviour {
     public void Init(RRStageController rrStageController, RhythmRiftScenePayload payload, PracticePlusWindow practicePlusWindow) {
         beatmapPlayer = rrStageController.BeatmapPlayer;
         this.practicePlusWindow = practicePlusWindow;
+        practicePlusWindow.OpenVisualizerClicked = OpenVisualizerClicked;
         skipTime = Mathf.Max(0f, rrStageController.ComputeSkipTime(
             rrStageController._practiceModeStartBeatmapIndex,
             rrStageController._practiceModeStartBeatNumber,
@@ -140,14 +120,15 @@ public class PracticePlusManager : MonoBehaviour {
             rrStageController.UpdateUI();
         }
 
-        string chartIdentifier = Util.GetIdentifierFromPayload(payload);
+        string chartDataPath = Util.GetChartDataPath(payload);
 
-        if (chartIdentifier == currentChartIdentifier)
+        if (chartDataPath == currentChartDataPath)
             return;
 
-        currentChartIdentifier = chartIdentifier;
+        currentChartDataPath = chartDataPath;
 
-        if (!TryGetChartData($"{chartIdentifier}.bin", out var chartData) && !TryGetFallbackChartData($"{payload.TrackMetadata.TrackName}_{payload.TrackDifficulty.Difficulty}.bin", payload, out chartData)) {
+        if (!TryGetChartData(chartDataPath, out var chartData)
+            && !TryGetFallbackChartData($"{payload.TrackMetadata.TrackName}_{payload.TrackDifficulty.Difficulty}.bin", chartDataPath, payload, out chartData)) {
             chartRenderData = null;
 
             return;
@@ -176,5 +157,26 @@ public class PracticePlusManager : MonoBehaviour {
 
         activations.Sort();
         chartRenderData = new ChartRenderData(chartData.BeatData, hits.ToArray(), activations.ToArray());
+    }
+
+    private void OpenVisualizerClicked() {
+        if (string.IsNullOrWhiteSpace(currentChartDataPath))
+            return;
+
+        if (!File.Exists(currentChartDataPath)) {
+            Plugin.Logger.LogInfo("No chart data found for this chart");
+
+            return;
+        }
+
+        string executable = Path.Combine(Plugin.AssemblyPath, "RiftPracticePlus.Visualizer.exe");
+
+        if (!File.Exists(executable)) {
+            Plugin.Logger.LogWarning("Could not find visualizer executable");
+
+            return;
+        }
+
+        Process.Start(executable, $"\"{currentChartDataPath}\"");
     }
 }

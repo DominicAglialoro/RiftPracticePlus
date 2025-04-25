@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 namespace RiftPracticePlus;
 
@@ -9,6 +10,8 @@ public class PracticePlusWindow {
 
     public int StartingVibe { get; private set; }
 
+    public  Action OpenVisualizerClicked { get; set; }
+
     private Rect windowRect;
 
     private readonly RectInt drawSpaceRect;
@@ -17,7 +20,7 @@ public class PracticePlusWindow {
     public PracticePlusWindow(int x, int y, int windowWidth, int windowHeight) {
         windowRect = new Rect(x, y, windowWidth, windowHeight);
         drawSpaceRect = new RectInt(SIDE_PADDING, TOP_PADDING, windowWidth - 2 * SIDE_PADDING, windowHeight - TOP_PADDING - SIDE_PADDING);
-        chartRenderer = new ChartRenderer(new RectInt(drawSpaceRect.x, drawSpaceRect.y + 28, drawSpaceRect.width, drawSpaceRect.height - 28));
+        chartRenderer = new ChartRenderer(new RectInt(drawSpaceRect.x, drawSpaceRect.y + 56, drawSpaceRect.width, drawSpaceRect.height - 28));
     }
 
     public void Render(ChartRenderParams chartRenderParams) {
@@ -35,6 +38,10 @@ public class PracticePlusWindow {
     private void DrawWindow(ChartRenderParams chartRenderParams) {
         GUI.Label(new Rect(drawSpaceRect.x, drawSpaceRect.y, 100f, 20f), "Starting Vibe:");
         StartingVibe = GUI.Toolbar(new Rect(drawSpaceRect.xMax - 100f, drawSpaceRect.y, 100f, 20f), StartingVibe, STARTING_VIBE_OPTIONS);
+
+        if (GUI.Button(new Rect(drawSpaceRect.x, drawSpaceRect.y + 28f, drawSpaceRect.width, 20f), "Open Visualizer"))
+            OpenVisualizerClicked?.Invoke();
+
         chartRenderer.Render(chartRenderParams);
         GUI.DragWindow();
     }

@@ -56,6 +56,8 @@ public class CaptureResult {
             }
         }
 
+        hits.Sort();
+
         return hits.ToArray();
     }
 

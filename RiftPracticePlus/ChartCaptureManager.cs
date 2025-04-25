@@ -46,22 +46,18 @@ public class ChartCaptureManager : MonoBehaviour {
         Array.Sort(hitsArray);
 
         var vibeData = Solver.Solve(new SolverData(beatData, hitsArray));
-
         var chartData = new ChartData(
             payload.TrackName,
             payload.GetLevelId(),
             (Difficulty) payload.TrackDifficulty.Difficulty,
-            !string.IsNullOrWhiteSpace(payload.TrackDifficulty.BeatmapFilePath),
+            Util.IsPayloadCustom(payload),
             beatData,
             hitsArray,
             vibeData);
 
-        string directory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "RiftPracticePlus");
+        string path = Util.GetChartDataPath(payload);
 
-        Directory.CreateDirectory(directory);
-
-        string path = Path.Combine(directory, $"{Util.CleanFileName(Util.GetIdentifierFromPayload(payload))}.bin");
-
+        Directory.CreateDirectory(Path.GetDirectoryName(path));
         chartData.SaveToFile(path);
         Plugin.Logger.LogInfo($"Saved chart data to {path}");
         beatmap = null;
