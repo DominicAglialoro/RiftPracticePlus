@@ -8,6 +8,7 @@ using RiftCommon;
 using Shared;
 using Shared.RhythmEngine;
 using Shared.SceneLoading.Payloads;
+using Shared.TrackData;
 using UnityEngine;
 
 namespace RiftPracticePlus;
@@ -46,7 +47,7 @@ public class PracticePlusManager : MonoBehaviour {
             payload.TrackName,
             payload.GetLevelId(),
             (RiftCommon.Difficulty) payload.TrackDifficulty.Difficulty,
-            Util.IsPayloadCustom(payload),
+            payload.TrackMetadata.Category.IsUgc(),
             captureResult.BeatData,
             hits,
             vibeData);

@@ -7,6 +7,7 @@ using MonoMod.Cil;
 using MonoMod.RuntimeDetour;
 using RiftCommon;
 using Shared.SceneLoading.Payloads;
+using Shared.TrackData;
 
 namespace RiftPracticePlus;
 
@@ -60,12 +61,10 @@ internal static class Util {
         _ => throw new ArgumentOutOfRangeException(nameof(id), id, null)
     };
 
-    public static bool IsPayloadCustom (RhythmRiftScenePayload payload) => !string.IsNullOrWhiteSpace(payload.TrackDifficulty.BeatmapFilePath);
-
     public static string GetChartDataPath(RhythmRiftScenePayload payload) {
         string directory;
 
-        if (IsPayloadCustom(payload))
+        if (payload.TrackMetadata.Category.IsUgc())
             directory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "RiftPracticePlus");
         else
             directory = Path.Combine(Plugin.AssemblyPath, "ChartData");

@@ -13,13 +13,14 @@ using Shared;
 using Shared.Pins;
 using Shared.RhythmEngine;
 using Shared.SceneLoading.Payloads;
+using Shared.TrackData;
 using UnityEngine;
 
 namespace RiftPracticePlus;
 
 [BepInPlugin("programmatic.riftPracticePlus", "RiftPracticePlus", PLUGIN_VERSION)]
 public class Plugin : BaseUnityPlugin {
-    public const string PLUGIN_VERSION = "1.4.0";
+    public const string PLUGIN_VERSION = "1.4.1";
 
     private const int WINDOW_WIDTH = 200;
     private const int WINDOW_HEIGHT = 800;
@@ -93,7 +94,7 @@ public class Plugin : BaseUnityPlugin {
 
             practicePlusManager.Init(rrStageController, payload, practicePlusWindow);
         }
-        else if (PinsController.IsPinActive("GoldenLute") && Util.IsPayloadCustom(payload)) {
+        else if (PinsController.IsPinActive("GoldenLute") && payload.TrackMetadata.Category.IsUgc()) {
             Logger.LogInfo($"Begin capturing Name: {payload.TrackMetadata.TrackName}, ID: {payload.GetLevelId()}, Difficulty: {payload.TrackDifficulty.Difficulty}");
             chartCaptureManager = FindObjectOfType<ChartCaptureManager>();
 

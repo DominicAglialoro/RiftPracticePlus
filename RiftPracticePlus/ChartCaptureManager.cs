@@ -4,6 +4,7 @@ using System.IO;
 using RiftCommon;
 using Shared.RhythmEngine;
 using Shared.SceneLoading.Payloads;
+using Shared.TrackData;
 using UnityEngine;
 
 namespace RiftPracticePlus;
@@ -50,7 +51,7 @@ public class ChartCaptureManager : MonoBehaviour {
             payload.TrackName,
             payload.GetLevelId(),
             (Difficulty) payload.TrackDifficulty.Difficulty,
-            Util.IsPayloadCustom(payload),
+            payload.TrackMetadata.Category.IsUgc(),
             beatData,
             hitsArray,
             vibeData);
