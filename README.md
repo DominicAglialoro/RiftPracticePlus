@@ -13,6 +13,22 @@ This is a mod that extends the features of Rift of the Necrodancer's Practice Mo
 7. Open a chart in practice mode. Practice Plus should open the associated binary file automatically and display a window indicating the timings of every note in the chart
 8. Press P to show or hide the window. You can use your mouse to drag the window to another part of the screen
 
+## Visualizer
+
+To use the Visualizer, click the "Open Visualizer" button on the Practice Plus window. If there is captured data for the current chart, the Visualizer will open and display the following:
+
+* Every instant in which you hit an enemy, indicated by a white dot, positioned vertically based on the number of points gained by that hit (multiple simultaneous hits are considered a single hit worth the sum of each hit)
+* Every instant in which you gain Vibe, indicated by a vertical yellow line
+* The amount of bonus points you'll gain by activating Vibe at any point in time, indicated by a pair of bar graphs (green for single Vibe activations, blue for double Vibe activations)
+* The set of optimal Vibe activations, indicated by gold lines on top of the aforementioned bar graphs
+* The total amount of bonus points you'll gain by performing all optimal Vibe activations
+
+You can navigate the chart by using the mouse wheel to scroll, and holding shift and scrolling to zoom in or out
+
+Click on the graph to visualize a Vibe activation starting at that particular point in time. Clicking on the lower half of the graph will display a single Vibe activation, while clicking on the upper half of the graph will display a double vibe activation
+
+Press Enter to load a different chart
+
 ## Binary File Format
 
 The generated binary files consist of the following values, with the specified types:
