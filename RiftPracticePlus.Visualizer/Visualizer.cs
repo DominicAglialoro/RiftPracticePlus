@@ -125,20 +125,26 @@ public class Visualizer {
 
         int maxScore = 0;
         var pairs = new List<(PointD, double)>();
+        var bestActivations = new List<Activation>();
 
         foreach (var activation in singleVibeActivations) {
             maxScore = Math.Max(maxScore, activation.Score);
 
             if (activation.IsOptimal)
-                pairs.Add((new PointD(activation.MinStartTime, activation.Score), activation.MaxStartTime));
+                bestActivations.Add(activation);
         }
 
         foreach (var activation in doubleVibeActivations) {
             maxScore = Math.Max(maxScore, activation.Score);
 
             if (activation.IsOptimal)
-                pairs.Add((new PointD(activation.MinStartTime, activation.Score), activation.MaxStartTime));
+                bestActivations.Add(activation);
         }
+
+        bestActivations.Sort();
+
+        foreach (var activation in bestActivations)
+            pairs.Add((new PointD(activation.MinStartTime, activation.Score), activation.MaxStartTime));
 
         var points = new List<PointD>();
 

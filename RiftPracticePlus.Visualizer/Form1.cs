@@ -4,7 +4,7 @@ using System.Windows.Forms;
 namespace RiftPracticePlus.Visualizer;
 
 public partial class Form1 : Form {
-    private Visualizer visualizer;
+    private readonly Visualizer visualizer;
 
     public Form1() {
         InitializeComponent();
