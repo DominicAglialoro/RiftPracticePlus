@@ -72,5 +72,5 @@ internal static class Util {
         return Path.Combine(directory, $"{GetFileNameFromPayload(payload)}.bin");
     }
 
-    private static string GetFileNameFromPayload(RhythmRiftScenePayload payload) => Regex.Replace($"{payload.TrackMetadata.TrackName}_{payload.GetLevelId()}_{payload.TrackDifficulty.Difficulty}", @"[\0\\\/:*?""<>|.]", "-", RegexOptions.Compiled);
+    private static string GetFileNameFromPayload(RhythmRiftScenePayload payload) => Regex.Replace($"{payload.TrackMetadata.TrackName}_{payload.GetLevelId()}_{payload.TrackDifficulty.Difficulty}", @"[^\w\s`~!@#$%^&()-=+\[\]\{\};',]", "-", RegexOptions.Compiled);
 }
