@@ -20,7 +20,7 @@ namespace RiftPracticePlus;
 
 [BepInPlugin("programmatic.riftPracticePlus", "RiftPracticePlus", PLUGIN_VERSION)]
 public class Plugin : BaseUnityPlugin {
-    public const string PLUGIN_VERSION = "1.4.1";
+    public const string PLUGIN_VERSION = "1.4.3";
 
     private const int WINDOW_WIDTH = 200;
     private const int WINDOW_HEIGHT = 800;
