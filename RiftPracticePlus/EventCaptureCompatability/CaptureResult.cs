@@ -48,10 +48,10 @@ public class CaptureResult {
                         }
                     }
 
-                    hits.Add(new Hit(time, beat, endTime, endBeat, riftEvent.EnemyType, riftEvent.Column, riftEvent.BaseMultiplier * riftEvent.BaseScore, false));
+                    hits.Add(new Hit(time, beat, endTime, endBeat, riftEvent.EnemyType, riftEvent.Column, false, riftEvent.BaseMultiplier * riftEvent.BaseScore, false));
                     break;
                 case EventType.VibeGained:
-                    hits.Add(new Hit(time, beat, time, beat, EnemyType.None, 0, 0, true));
+                    hits.Add(new Hit(time, beat, time, beat, EnemyType.None, 0, false, 0, true));
                     break;
             }
         }

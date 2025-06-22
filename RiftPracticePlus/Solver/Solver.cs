@@ -28,14 +28,28 @@ public static class Solver {
         foreach (int i in bestSingleVibeActivationIndices) {
             var activation = singleVibeActivations[i];
 
-            singleVibeActivations[i] = new Activation(activation.MinStartTime, activation.MaxStartTime, activation.LastHitTime, activation.Score, true);
+            singleVibeActivations[i] = new Activation(
+                activation.MinStartTime,
+                activation.MinStartBeat,
+                activation.MaxStartTime,
+                activation.MaxStartBeat,
+                activation.LastHitTime,
+                activation.LastHitBeat,
+                activation.Score, true);
         }
 
 
         foreach (int i in bestDoubleVibeActivationIndices) {
             var activation = doubleVibeActivations[i];
 
-            doubleVibeActivations[i] = new Activation(activation.MinStartTime, activation.MaxStartTime, activation.LastHitTime, activation.Score, true);
+            doubleVibeActivations[i] = new Activation(
+                activation.MinStartTime,
+                activation.MinStartBeat,
+                activation.MaxStartTime,
+                activation.MaxStartBeat,
+                activation.LastHitTime,
+                activation.LastHitBeat,
+                activation.Score, true);
         }
 
         Array.Sort(singleVibeActivations);
@@ -326,12 +340,18 @@ public static class Solver {
     }
 
     private static Activation GetActivationFromData(SolverData data, List<ActivationData> activationData, int index) {
+        var beatData = data.BeatData;
         var activation = activationData[index];
+        double minStartTime = activation.MinStartTime;
+        double maxStartTime = index < activationData.Count - 1 ? activationData[index + 1].MinStartTime : activation.MinStartTime + 1d;
 
         return new Activation(
-            activation.MinStartTime,
-            index < activationData.Count - 1 ? activationData[index + 1].MinStartTime : activation.MinStartTime + 1d,
+            minStartTime,
+            beatData.GetBeatFromTime(minStartTime),
+            maxStartTime,
+            beatData.GetBeatFromTime(maxStartTime),
             data.GetHitTime(activation.EndIndex - 1),
+            data.GetHitBeat(activation.EndIndex - 1),
             activation.Score,
             false);
     }

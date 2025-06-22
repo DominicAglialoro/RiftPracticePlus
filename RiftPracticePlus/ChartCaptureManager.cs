@@ -22,14 +22,14 @@ public class ChartCaptureManager : MonoBehaviour {
         hits.Clear();
     }
 
-    public void CaptureHit(float beat, float endBeat, EnemyType enemyType, int column, int score) {
+    public void CaptureHit(float beat, float endBeat, EnemyType enemyType, int column, bool facingLeft, int score) {
         if (!EnsureBeatmap())
             return;
 
         double time = beatData.GetTimeFromBeat(beat);
         double endTime = beatData.GetTimeFromBeat(endBeat);
 
-        hits.Add(new Hit(time, beat, endTime, endBeat, enemyType, column, score, false));
+        hits.Add(new Hit(time, beat, endTime, endBeat, enemyType, column, facingLeft, score, false));
     }
 
     public void CaptureVibeGained(float beat) {
@@ -38,7 +38,7 @@ public class ChartCaptureManager : MonoBehaviour {
 
         double time = beatData.GetTimeFromBeat(beat);
 
-        hits.Add(new Hit(time, beat, time, beat, EnemyType.None, 0, 0, true));
+        hits.Add(new Hit(time, beat, time, beat, EnemyType.None, 0, false, 0, true));
     }
 
     public void Complete(RhythmRiftScenePayload payload) {
@@ -51,6 +51,7 @@ public class ChartCaptureManager : MonoBehaviour {
             payload.TrackName,
             payload.GetLevelId(),
             (Difficulty) payload.TrackDifficulty.Difficulty,
+            payload.TrackDifficulty.Intensity ?? 0f,
             payload.TrackMetadata.Category.IsUgc(),
             beatData,
             hitsArray,

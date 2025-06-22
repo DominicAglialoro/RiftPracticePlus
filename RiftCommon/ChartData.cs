@@ -5,7 +5,7 @@ namespace RiftCommon;
 
 public class ChartData {
     private const string HEADER = "RIFT_CHART_DATA";
-    private const int FORMAT_VERSION = 0;
+    private const int FORMAT_VERSION = 1;
 
     public static ChartData LoadFromFile(string path) {
         using var reader = new BinaryReader(File.OpenRead(path));
@@ -23,6 +23,7 @@ public class ChartData {
         string name = reader.ReadString();
         string id = reader.ReadString();
         var difficulty = (Difficulty) reader.ReadInt32();
+        float intensity = formatVersion >= 1 ? reader.ReadSingle() : 0f;
         bool isCustom = reader.ReadBoolean();
         float bpm = reader.ReadSingle();
         int beatDivisions = reader.ReadInt32();
@@ -32,6 +33,7 @@ public class ChartData {
         for (int i = 0; i < beatTimingsCount; i++)
             beatTimings[i] = reader.ReadDouble();
 
+        var beatData = new BeatData(bpm, beatDivisions, beatTimings);
         int hitsCount = reader.ReadInt32();
         var hits = new Hit[hitsCount];
 
@@ -42,10 +44,11 @@ public class ChartData {
             double endBeat = reader.ReadDouble();
             var enemyType = (EnemyType) reader.ReadInt32();
             int column = reader.ReadInt32();
+            bool facingLeft = formatVersion >= 1 && reader.ReadBoolean();
             int score = reader.ReadInt32();
             bool givesVibe = reader.ReadBoolean();
 
-            hits[i] = new Hit(time, beat, endTime, endBeat, enemyType, column, score, givesVibe);
+            hits[i] = new Hit(time, beat, endTime, endBeat, enemyType, column, facingLeft, score, givesVibe);
         }
 
         int maxVibeBonus = reader.ReadInt32();
@@ -54,12 +57,15 @@ public class ChartData {
 
         for (int i = 0; i < singleVibeActivationsCount; i++) {
             double minStartTime = reader.ReadDouble();
+            double minStartBeat = formatVersion >= 1 ? reader.ReadDouble() : beatData.GetBeatFromTime(minStartTime);
             double maxStartTime = reader.ReadDouble();
+            double maxStartBeat = formatVersion >= 1 ? reader.ReadDouble() : beatData.GetBeatFromTime(maxStartTime);
             double lastHitTime = reader.ReadDouble();
+            double lastHitBeat = formatVersion >= 1 ? reader.ReadDouble() : beatData.GetBeatFromTime(lastHitTime);
             int score = reader.ReadInt32();
             bool isOptimal = reader.ReadBoolean();
 
-            singleVibeActivations[i] = new Activation(minStartTime, maxStartTime, lastHitTime, score, isOptimal);
+            singleVibeActivations[i] = new Activation(minStartTime, minStartBeat, maxStartTime, maxStartBeat, lastHitTime, lastHitBeat, score, isOptimal);
         }
 
         int doubleVibeActivationsCount = reader.ReadInt32();
@@ -67,29 +73,34 @@ public class ChartData {
 
         for (int i = 0; i < doubleVibeActivationsCount; i++) {
             double minStartTime = reader.ReadDouble();
+            double minStartBeat = formatVersion >= 1 ? reader.ReadDouble() : beatData.GetBeatFromTime(minStartTime);
             double maxStartTime = reader.ReadDouble();
+            double maxStartBeat = formatVersion >= 1 ? reader.ReadDouble() : beatData.GetBeatFromTime(maxStartTime);
             double lastHitTime = reader.ReadDouble();
+            double lastHitBeat = formatVersion >= 1 ? reader.ReadDouble() : beatData.GetBeatFromTime(lastHitTime);
             int score = reader.ReadInt32();
             bool isOptimal = reader.ReadBoolean();
 
-            doubleVibeActivations[i] = new Activation(minStartTime, maxStartTime, lastHitTime, score, isOptimal);
+            doubleVibeActivations[i] = new Activation(minStartTime, minStartBeat, maxStartTime, maxStartBeat, lastHitTime, lastHitBeat, score, isOptimal);
         }
 
-        return new ChartData(name, id, difficulty, isCustom, new BeatData(bpm, beatDivisions, beatTimings), hits, new VibeData(maxVibeBonus, singleVibeActivations, doubleVibeActivations));
+        return new ChartData(name, id, difficulty, intensity, isCustom, beatData, hits, new VibeData(maxVibeBonus, singleVibeActivations, doubleVibeActivations));
     }
 
     public readonly string Name;
     public readonly string ID;
     public readonly Difficulty Difficulty;
+    public readonly float Intensity;
     public readonly bool IsCustom;
     public readonly BeatData BeatData;
     public readonly Hit[] Hits;
     public readonly VibeData VibeData;
 
-    public ChartData(string name, string id, Difficulty difficulty, bool isCustom, BeatData beatData, Hit[] hits, VibeData vibeData) {
+    public ChartData(string name, string id, Difficulty difficulty, float intensity, bool isCustom, BeatData beatData, Hit[] hits, VibeData vibeData) {
         Name = name;
         ID = id;
         Difficulty = difficulty;
+        Intensity = intensity;
         IsCustom = isCustom;
         BeatData = beatData;
         Hits = hits;
@@ -104,6 +115,7 @@ public class ChartData {
         writer.Write(Name);
         writer.Write(ID);
         writer.Write((int) Difficulty);
+        writer.Write(Intensity);
         writer.Write(IsCustom);
         writer.Write(BeatData.BPM);
         writer.Write(BeatData.BeatDivisions);
@@ -121,6 +133,7 @@ public class ChartData {
             writer.Write(hit.EndBeat);
             writer.Write((int) hit.EnemyType);
             writer.Write(hit.Column);
+            writer.Write(hit.FacingLeft);
             writer.Write(hit.Score);
             writer.Write(hit.GivesVibe);
         }
@@ -130,8 +143,11 @@ public class ChartData {
 
         foreach (var activation in VibeData.SingleVibeActivations) {
             writer.Write(activation.MinStartTime);
+            writer.Write(activation.MinStartBeat);
             writer.Write(activation.MaxStartTime);
+            writer.Write(activation.MaxStartBeat);
             writer.Write(activation.LastHitTime);
+            writer.Write(activation.LastHitBeat);
             writer.Write(activation.Score);
             writer.Write(activation.IsOptimal);
         }
@@ -140,8 +156,11 @@ public class ChartData {
 
         foreach (var activation in VibeData.DoubleVibeActivations) {
             writer.Write(activation.MinStartTime);
+            writer.Write(activation.MinStartBeat);
             writer.Write(activation.MaxStartTime);
+            writer.Write(activation.MaxStartBeat);
             writer.Write(activation.LastHitTime);
+            writer.Write(activation.LastHitBeat);
             writer.Write(activation.Score);
             writer.Write(activation.IsOptimal);
         }

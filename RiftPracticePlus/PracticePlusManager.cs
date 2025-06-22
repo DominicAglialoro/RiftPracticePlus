@@ -47,6 +47,7 @@ public class PracticePlusManager : MonoBehaviour {
             payload.TrackName,
             payload.GetLevelId(),
             (RiftCommon.Difficulty) payload.TrackDifficulty.Difficulty,
+            payload.TrackDifficulty.Intensity ?? 0f,
             payload.TrackMetadata.Category.IsUgc(),
             captureResult.BeatData,
             hits,

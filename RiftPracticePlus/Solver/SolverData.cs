@@ -17,15 +17,17 @@ public class SolverData {
         HitGroups = new List<HitGroup>();
 
         double currentTime = double.MinValue;
+        double currentBeat = double.MinValue;
         int currentScore = 0;
         bool currentGivesVibe = false;
 
         foreach (var hit in hits) {
             if (hit.Time > currentTime) {
                 if (currentScore > 0 || currentGivesVibe)
-                    HitGroups.Add(new HitGroup(currentTime, currentScore, currentGivesVibe));
+                    HitGroups.Add(new HitGroup(currentTime, currentBeat, currentScore, currentGivesVibe));
 
                 currentTime = hit.Time;
+                currentBeat = hit.Beat;
                 currentScore = 0;
                 currentGivesVibe = false;
             }
@@ -35,7 +37,7 @@ public class SolverData {
         }
 
         if (currentScore > 0 || currentGivesVibe)
-            HitGroups.Add(new HitGroup(currentTime, currentScore, currentGivesVibe));
+            HitGroups.Add(new HitGroup(currentTime, currentBeat, currentScore, currentGivesVibe));
 
         nextVibes = new int[HitGroups.Count];
 
@@ -68,6 +70,16 @@ public class SolverData {
             return double.PositiveInfinity;
 
         return HitGroups[hitIndex].Time;
+    }
+
+    public double GetHitBeat(int hitIndex) {
+        if (hitIndex < 0)
+            return double.NegativeInfinity;
+
+        if (hitIndex >= HitGroups.Count)
+            return double.PositiveInfinity;
+
+        return HitGroups[hitIndex].Beat;
     }
 
     public int GetNextVibe(int hitIndex) {

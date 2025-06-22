@@ -62,7 +62,7 @@ public class Plugin : BaseUnityPlugin {
         if (enemyType == EnemyType.Wyrm)
             endBeat += Math.Max(2, enemy.EnemyLength) - 1;
 
-        chartCaptureManager.CaptureHit(hitData.TargetBeat, endBeat, enemyType, enemy.CurrentGridPosition.x, inputScore * baseMultiplier);
+        chartCaptureManager.CaptureHit(hitData.TargetBeat, endBeat, enemyType, enemy.CurrentGridPosition.x, enemy.IsFacingLeft, inputScore * baseMultiplier);
     }
 
     private static void OnVibeChainSuccessFromHit(RRStageController rrStageController, RREnemyController.EnemyHitData hitData)
