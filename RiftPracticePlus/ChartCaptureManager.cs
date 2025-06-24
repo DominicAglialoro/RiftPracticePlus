@@ -57,7 +57,7 @@ public class ChartCaptureManager : MonoBehaviour {
             hitsArray,
             vibeData);
 
-        string path = Util.GetChartDataPath(payload);
+        string path = Util.GetChartDataPath(payload.TrackMetadata, payload.TrackDifficulty.Difficulty);
 
         Directory.CreateDirectory(Path.GetDirectoryName(path));
         chartData.SaveToFile(path);

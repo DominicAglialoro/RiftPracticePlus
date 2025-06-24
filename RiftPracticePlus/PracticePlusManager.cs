@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Reflection;
 using RhythmRift;
 using RiftCommon;
 using Shared;
@@ -122,7 +121,7 @@ public class PracticePlusManager : MonoBehaviour {
             rrStageController.UpdateUI();
         }
 
-        string chartDataPath = Util.GetChartDataPath(payload);
+        string chartDataPath = Util.GetChartDataPath(payload.TrackMetadata, payload.TrackDifficulty.Difficulty);
 
         if (chartDataPath == currentChartDataPath)
             return;

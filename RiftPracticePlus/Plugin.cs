@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using BepInEx;
 using BepInEx.Configuration;
@@ -10,17 +11,20 @@ using RhythmRift;
 using RhythmRift.Enemies;
 using RiftCommon;
 using Shared;
+using Shared.Analytics;
 using Shared.Pins;
-using Shared.RhythmEngine;
+using Shared.SceneLoading;
 using Shared.SceneLoading.Payloads;
 using Shared.TrackData;
+using Shared.TrackSelection;
 using UnityEngine;
+using Difficulty = Shared.Difficulty;
 
 namespace RiftPracticePlus;
 
 [BepInPlugin("programmatic.riftPracticePlus", "RiftPracticePlus", PLUGIN_VERSION)]
 public class Plugin : BaseUnityPlugin {
-    public const string PLUGIN_VERSION = "1.4.4";
+    public const string PLUGIN_VERSION = "1.5.0";
 
     private const int WINDOW_WIDTH = 200;
     private const int WINDOW_HEIGHT = 800;
@@ -35,6 +39,8 @@ public class Plugin : BaseUnityPlugin {
     private static PracticePlusWindow practicePlusWindow;
     private static ChartCaptureManager chartCaptureManager;
 
+    private static List<(ITrackMetadata, Difficulty)> trackQueue = new();
+
     private void Awake() {
         ShowPracticePlusWindow = Config.Bind("General", "ShowPracticePlusWindow", true, "Whether or not to show the Practice Plus window when loading a chart in practice mode. Can be toggled by pressing P");
         WindowPositionX = Config.Bind("General", "Window Position X", 0, "The X position of the Practice Plus window");
@@ -43,6 +49,7 @@ public class Plugin : BaseUnityPlugin {
         Logger = base.Logger;
         Logger.LogInfo("Loaded RiftPracticePlus");
 
+        // typeof(TrackSelectionSceneController).CreateMethodHook(nameof(TrackSelectionSceneController.Update), TrackSelectionSceneController_Update);
         typeof(RRStageController).CreateMethodHook(nameof(RRStageController.PlayStageIntro), RRStageController_PlayStageIntro);
         typeof(RRStageController).CreateMethodHook(nameof(RRStageController.ShowResultsScreen), RRStageController_ShowResultsScreen);
         typeof(RRStageController).CreateILHook(nameof(RRStageController.ProcessHitData), RRStageController_ProcessHitData_IL);
@@ -116,6 +123,7 @@ public class Plugin : BaseUnityPlugin {
             chartCaptureManager.Complete(payload);
 
         chartCaptureManager = null;
+        // PlayNextInQueue();
     }
 
     private static void RRStageController_ProcessHitData_IL(ILContext il) {
@@ -144,5 +152,89 @@ public class Plugin : BaseUnityPlugin {
         cursor.Emit(OpCodes.Ldarg_0);
         cursor.Emit(OpCodes.Ldarg_1);
         cursor.EmitCall(OnVibeChainSuccessFromWyrmKill);
+    }
+
+    private static void TrackSelectionSceneController_Update(Action<TrackSelectionSceneController> update, TrackSelectionSceneController trackSelectionSceneController) {
+        update(trackSelectionSceneController);
+
+        if (!Input.GetKeyDown(KeyCode.P))
+            return;
+
+        trackQueue.Clear();
+
+        foreach (var rrTrackMetaData in trackSelectionSceneController._trackMetaDatas) {
+            if (rrTrackMetaData.IsTutorial || rrTrackMetaData.IsFiller || rrTrackMetaData.IsPromo)
+                continue;
+
+            var metadata = trackSelectionSceneController.TryGetDynamicMetadata(rrTrackMetaData.LevelId);
+
+            if (metadata == null)
+                continue;
+
+            trackQueue.Add((metadata, Difficulty.Easy));
+            trackQueue.Add((metadata, Difficulty.Medium));
+            trackQueue.Add((metadata, Difficulty.Hard));
+            trackQueue.Add((metadata, Difficulty.Impossible));
+        }
+
+        PlayNextInQueue();
+    }
+
+    private static void PlayNextInQueue() {
+        ITrackMetadata metadata;
+        Difficulty difficulty;
+
+        while (trackQueue.Count > 0) {
+            (metadata, difficulty) = trackQueue[0];
+
+            if (!File.Exists(Util.GetChartDataPath(metadata, difficulty)))
+                break;
+
+            trackQueue.RemoveAt(0);
+        }
+
+        if (trackQueue.Count == 0)
+            return;
+
+        (metadata, difficulty) = trackQueue[0];
+
+        var dynamicScenePayload = RRDynamicScenePayload.FromMetadata(metadata, metadata.GetDifficulty(difficulty), TrackMetadataUtils.ResolveAudioChannel(metadata));
+
+        dynamicScenePayload.IsPracticeMode = false;
+        dynamicScenePayload.IsPracticeMode = false;
+        dynamicScenePayload.SetPracticeModeBeatRange(0, 0);
+        dynamicScenePayload.SetPracticeModeSpeedAdjustment(SpeedModifier.OneHundredPercent);
+        dynamicScenePayload.ShouldProcGen = false;
+        dynamicScenePayload.ProcGenSeed = string.Empty;
+        dynamicScenePayload.IsRandomSeed = false;
+        SceneLoadData.SetCurrentScenePayload(dynamicScenePayload);
+
+        var sceneToLoadMetadata = new SceneLoadData.SceneToLoadMetaData() {
+            SceneName = "RhythmRift",
+            LevelId = metadata.LevelId,
+            StageDifficulty = difficulty,
+            IsStoryMode = false,
+            IsCalibrationTest = false,
+            IsTutorial = false,
+            IsPracticeMode = false,
+            PracticeModeStartBeat = 0,
+            PracticeModeEndBeat = 0,
+            PracticeModeSpeedModifier = SpeedModifier.OneHundredPercent,
+            IsShopkeeperMode = false,
+            IsRemixMode = false,
+            CustomRemixSeed = string.Empty,
+            IsRandomSeed = false,
+            ShouldRewardDiamonds = false,
+            ShouldLevelBeLoaded = true,
+            RRIntroDialogueID = string.Empty,
+            RROutroDialogueID = string.Empty,
+            ShouldMuteCounterpartVO = false,
+            ShouldInvertCounterpartReactions = false
+        };
+
+        trackQueue.RemoveAt(0);
+        SceneLoadData.StageEntryType = RiftAnalyticsService.StageEntryType.StageSelectMenu;
+        SceneLoadData.QueueSceneLoadingMetaData(sceneToLoadMetadata);
+        SceneLoadingController.Instance.GoToScene(sceneToLoadMetadata);
     }
 }

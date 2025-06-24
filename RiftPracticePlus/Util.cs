@@ -8,6 +8,8 @@ using MonoMod.RuntimeDetour;
 using RiftCommon;
 using Shared.SceneLoading.Payloads;
 using Shared.TrackData;
+using Shared.TrackSelection;
+using Difficulty = Shared.Difficulty;
 
 namespace RiftPracticePlus;
 
@@ -61,16 +63,14 @@ internal static class Util {
         _ => throw new ArgumentOutOfRangeException(nameof(id), id, null)
     };
 
-    public static string GetChartDataPath(RhythmRiftScenePayload payload) {
+    public static string GetChartDataPath(ITrackMetadata metadata, Difficulty difficulty) {
         string directory;
 
-        if (payload.TrackMetadata.Category.IsUgc())
+        if (metadata.Category.IsUgc())
             directory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "RiftPracticePlus");
         else
             directory = Path.Combine(Plugin.AssemblyPath, "ChartData");
 
-        return Path.Combine(directory, $"{GetFileNameFromPayload(payload)}.bin");
+        return Path.Combine(directory, $"{Regex.Replace(metadata.TrackName, @"[^\w\s`~!@#$%^&()-=+\[\]\{\};',]", "-", RegexOptions.Compiled)}_{metadata.LevelId}_{difficulty}.bin");
     }
-
-    private static string GetFileNameFromPayload(RhythmRiftScenePayload payload) => Regex.Replace($"{payload.TrackMetadata.TrackName}_{payload.GetLevelId()}_{payload.TrackDifficulty.Difficulty}", @"[^\w\s`~!@#$%^&()-=+\[\]\{\};',]", "-", RegexOptions.Compiled);
 }

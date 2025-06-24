@@ -65,6 +65,10 @@
             <HintPath>C:\Program Files (x86)\Steam\steamapps\common\RiftOfTheNecroDancerOSTVolume1\RiftOfTheNecroDancer_Data\Managed\UnityEngine.dll</HintPath>
             <Private>false</Private>
         </Reference>
+        <Reference Include="Unity.Addressables">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\RiftOfTheNecroDancerOSTVolume1\RiftOfTheNecroDancer_Data\Managed\Unity.Addressables.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
         <Reference Include="UnityEngine.CoreModule">
             <HintPath>C:\Program Files (x86)\Steam\steamapps\common\RiftOfTheNecroDancerOSTVolume1\RiftOfTheNecroDancer_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
             <Private>false</Private>
