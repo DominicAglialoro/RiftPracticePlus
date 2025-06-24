@@ -42,6 +42,7 @@ The generated binary files consist of the following values, with the specified t
 2 = Medium, \
 3 = Hard, \
 4 = Impossible
+* The intensity of the chart (float)
 * Whether the chart is a custom chart (bool)
 * The BPM of the chart (float)
 * The number of divisions per beat (int)
@@ -89,14 +90,18 @@ The generated binary files consist of the following values, with the specified t
     32 = Drumstick, \
     33 = Ham
   * The column the enemy is in (int)
+  * Whether the enemy is facing left (bool)
   * The score value of the hit (base score * multiplier at that point, no true perfect or vibe bonus) (int)
   * Whether this hit is an instance of gaining Vibe (bool). Note that Vibe gains are captured as separate hits
 * The maximum point bonus to be gained via Vibe (int)
 * The number of possible single-Vibe activations found (int)
 * For each single-Vibe activation:
   * The earliest possible start time for the activation (double)
+  * The earliest possible start beat for the activation (double)
   * The latest possible start time for the activation (double)
+  * The latest possible start beat for the activation (double)
   * The time of the last hit during the activation (double)
+  * The beat of the last hit during the activation (double)
   * The total score bonus gained from the activation (int)
   * Whether the activation is part of the optimal Vibe path (bool)
 * The number of possible double-Vibe activations found (int)
