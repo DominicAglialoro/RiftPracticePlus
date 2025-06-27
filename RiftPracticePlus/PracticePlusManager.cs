@@ -28,36 +28,6 @@ public class PracticePlusManager : MonoBehaviour {
         return true;
     }
 
-    private static bool TryGetFallbackChartData(string fromName, string toPath, RhythmRiftScenePayload payload, out ChartData chartData) {
-        string directory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "RiftEventCapture", "GoldenLute");
-        string path = Path.Combine(directory, fromName);
-
-        if (!File.Exists(path)) {
-            chartData = null;
-
-            return false;
-        }
-
-        var captureResult = CaptureResult.LoadFromFile(path);
-        var hits = captureResult.GetHits();
-        var vibeData = Solver.Solve(new SolverData(captureResult.BeatData, hits));
-
-        chartData = new ChartData(
-            payload.TrackName,
-            payload.GetLevelId(),
-            (RiftCommon.Difficulty) payload.TrackDifficulty.Difficulty,
-            payload.TrackDifficulty.Intensity ?? 0f,
-            payload.TrackMetadata.Category.IsUgc(),
-            captureResult.BeatData,
-            hits,
-            vibeData);
-
-        chartData.SaveToFile(toPath);
-        Plugin.Logger.LogInfo($"Saved chart data to {toPath}");
-
-        return true;
-    }
-
     private string currentChartDataPath;
     private BeatmapPlayer beatmapPlayer;
     private ChartRenderData chartRenderData;
@@ -128,8 +98,7 @@ public class PracticePlusManager : MonoBehaviour {
 
         currentChartDataPath = chartDataPath;
 
-        if (!TryGetChartData(chartDataPath, out var chartData)
-            && !TryGetFallbackChartData($"{payload.TrackMetadata.TrackName}_{payload.TrackDifficulty.Difficulty}.bin", chartDataPath, payload, out chartData)) {
+        if (!TryGetChartData(chartDataPath, out var chartData)) {
             chartRenderData = null;
 
             return;

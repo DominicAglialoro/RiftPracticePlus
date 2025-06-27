@@ -42,6 +42,7 @@
     <ItemGroup>
         <Compile Include="Activation.cs" />
         <Compile Include="BeatData.cs" />
+        <Compile Include="BPMChange.cs" />
         <Compile Include="ChartData.cs" />
         <Compile Include="Difficulty.cs" />
         <Compile Include="EnemyType.cs" />

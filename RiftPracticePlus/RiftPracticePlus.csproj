@@ -84,11 +84,6 @@
     </ItemGroup>
     <ItemGroup>
         <Compile Include="ChartCaptureManager.cs" />
-        <Compile Include="EventCaptureCompatability\CaptureResult.cs" />
-        <Compile Include="EventCaptureCompatability\EventType.cs" />
-        <Compile Include="EventCaptureCompatability\RiftEvent.cs" />
-        <Compile Include="EventCaptureCompatability\SessionInfo.cs" />
-        <Compile Include="EventCaptureCompatability\Timestamp.cs" />
         <Compile Include="Plugin.cs" />
         <Compile Include="PracticePlusManager.cs" />
         <Compile Include="PracticePlusWindow\ChartRenderActivation.cs" />

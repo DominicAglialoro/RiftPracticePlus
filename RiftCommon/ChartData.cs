@@ -5,7 +5,7 @@ namespace RiftCommon;
 
 public class ChartData {
     private const string HEADER = "RIFT_CHART_DATA";
-    private const int FORMAT_VERSION = 1;
+    private const int FORMAT_VERSION = 4;
 
     public static ChartData LoadFromFile(string path) {
         using var reader = new BinaryReader(File.OpenRead(path));
@@ -25,15 +25,28 @@ public class ChartData {
         var difficulty = (Difficulty) reader.ReadInt32();
         float intensity = formatVersion >= 1 ? reader.ReadSingle() : 0f;
         bool isCustom = reader.ReadBoolean();
+        int maxBaseScore = formatVersion >= 3 ? reader.ReadInt32() : 0;
+        int maxCombo = formatVersion >= 4 ? reader.ReadInt32() : 0;
         float bpm = reader.ReadSingle();
         int beatDivisions = reader.ReadInt32();
+        int bpmChangesCount = formatVersion >= 2 ? reader.ReadInt32() : 0;
+        var bpmChanges = new BPMChange[bpmChangesCount];
+
+        for (int i = 0; i < bpmChangesCount; i++) {
+            double time = reader.ReadDouble();
+            double beat = reader.ReadDouble();
+            float changeBpm = reader.ReadSingle();
+
+            bpmChanges[i] = new BPMChange(time, beat, changeBpm);
+        }
+
         int beatTimingsCount = reader.ReadInt32();
         double[] beatTimings = new double[beatTimingsCount];
 
         for (int i = 0; i < beatTimingsCount; i++)
             beatTimings[i] = reader.ReadDouble();
 
-        var beatData = new BeatData(bpm, beatDivisions, beatTimings);
+        var beatData = new BeatData(bpm, beatDivisions, bpmChanges, beatTimings);
         int hitsCount = reader.ReadInt32();
         var hits = new Hit[hitsCount];
 
@@ -84,7 +97,7 @@ public class ChartData {
             doubleVibeActivations[i] = new Activation(minStartTime, minStartBeat, maxStartTime, maxStartBeat, lastHitTime, lastHitBeat, score, isOptimal);
         }
 
-        return new ChartData(name, id, difficulty, intensity, isCustom, beatData, hits, new VibeData(maxVibeBonus, singleVibeActivations, doubleVibeActivations));
+        return new ChartData(name, id, difficulty, intensity, isCustom, maxBaseScore, maxCombo, beatData, hits, new VibeData(maxVibeBonus, singleVibeActivations, doubleVibeActivations));
     }
 
     public readonly string Name;
@@ -92,11 +105,13 @@ public class ChartData {
     public readonly Difficulty Difficulty;
     public readonly float Intensity;
     public readonly bool IsCustom;
+    public readonly int MaxBaseScore;
+    public readonly int MaxCombo;
     public readonly BeatData BeatData;
     public readonly Hit[] Hits;
     public readonly VibeData VibeData;
 
-    public ChartData(string name, string id, Difficulty difficulty, float intensity, bool isCustom, BeatData beatData, Hit[] hits, VibeData vibeData) {
+    public ChartData(string name, string id, Difficulty difficulty, float intensity, bool isCustom, int maxBaseScore, int maxCombo, BeatData beatData, Hit[] hits, VibeData vibeData) {
         Name = name;
         ID = id;
         Difficulty = difficulty;
@@ -105,6 +120,8 @@ public class ChartData {
         BeatData = beatData;
         Hits = hits;
         VibeData = vibeData;
+        MaxCombo = maxCombo;
+        MaxBaseScore = maxBaseScore;
     }
 
     public void SaveToFile(string path) {
@@ -117,8 +134,18 @@ public class ChartData {
         writer.Write((int) Difficulty);
         writer.Write(Intensity);
         writer.Write(IsCustom);
+        writer.Write(MaxBaseScore);
+        writer.Write(MaxCombo);
         writer.Write(BeatData.BPM);
         writer.Write(BeatData.BeatDivisions);
+        writer.Write(BeatData.BPMChanges.Length);
+
+        foreach (var bpmChange in BeatData.BPMChanges) {
+            writer.Write(bpmChange.Time);
+            writer.Write(bpmChange.Beat);
+            writer.Write(bpmChange.BPM);
+        }
+
         writer.Write(BeatData.BeatTimings.Length);
 
         foreach (double beatTiming in BeatData.BeatTimings)

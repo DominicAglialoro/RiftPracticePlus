@@ -24,7 +24,7 @@ namespace RiftPracticePlus;
 
 [BepInPlugin("programmatic.riftPracticePlus", "RiftPracticePlus", PLUGIN_VERSION)]
 public class Plugin : BaseUnityPlugin {
-    public const string PLUGIN_VERSION = "1.5.0";
+    public const string PLUGIN_VERSION = "1.6.0";
 
     private const int WINDOW_WIDTH = 200;
     private const int WINDOW_HEIGHT = 800;
@@ -119,11 +119,15 @@ public class Plugin : BaseUnityPlugin {
         bool didNotFinish = false, bool cheatsDetected = false) {
         showResultsScreen(rrStageController, isNewHighScore, trackProgressPercentage, awardedDiamonds, didNotFinish, cheatsDetected);
 
-        if (chartCaptureManager != null && !didNotFinish && rrStageController._stageScenePayload is RhythmRiftScenePayload payload && !payload.IsChallenge && !payload.IsDailyChallenge && !payload.IsMicroRift && !payload.IsStoryMode && !payload.IsTutorial && !payload.IsPracticeMode)
-            chartCaptureManager.Complete(payload);
+        if (chartCaptureManager != null && !didNotFinish && rrStageController._stageScenePayload is RhythmRiftScenePayload payload
+            && !payload.IsChallenge && !payload.IsDailyChallenge && !payload.IsMicroRift && !payload.IsStoryMode && !payload.IsTutorial && !payload.IsPracticeMode) {
+            var inputRecord = rrStageController._stageInputRecord;
+
+            chartCaptureManager.Complete(payload, inputRecord.TotalScore, inputRecord.MaxComboCount);
+        }
 
         chartCaptureManager = null;
-        // PlayNextInQueue();
+        PlayNextInQueue();
     }
 
     private static void RRStageController_ProcessHitData_IL(ILContext il) {
@@ -171,43 +175,87 @@ public class Plugin : BaseUnityPlugin {
             if (metadata == null)
                 continue;
 
-            trackQueue.Add((metadata, Difficulty.Easy));
-            trackQueue.Add((metadata, Difficulty.Medium));
-            trackQueue.Add((metadata, Difficulty.Hard));
-            trackQueue.Add((metadata, Difficulty.Impossible));
+            CheckForFile(metadata, Difficulty.Easy);
+            CheckForFile(metadata, Difficulty.Medium);
+            CheckForFile(metadata, Difficulty.Hard);
+            CheckForFile(metadata, Difficulty.Impossible);
         }
 
         PlayNextInQueue();
+
+        void CheckForFile(ITrackMetadata metadata, Difficulty difficulty) {
+            string path = Util.GetChartDataPath(metadata, difficulty);
+
+            if (!File.Exists(path)) {
+                Logger.LogInfo($"{path} does not exist yet. Adding to queue");
+                trackQueue.Add((metadata, difficulty));
+
+                return;
+            }
+
+            var existingData = ChartData.LoadFromFile(path);
+            var beatData = existingData.BeatData;
+
+            if (beatData.BeatTimings.Length > 0 && beatData.BPMChanges.Length == 0) {
+                Logger.LogInfo($"{path} is missing BPM changes. Adding to queue");
+                trackQueue.Add((metadata, difficulty));
+
+                return;
+            }
+
+            bool mustSave = false;
+            int maxBaseScore = existingData.MaxBaseScore;
+            int maxCombo = existingData.MaxCombo;
+            int actualMaxBaseScore = Util.ComputeMaxBaseScore(existingData.Hits);
+            int actualMaxCombo = Util.ComputeMaxCombo(existingData.Hits);
+
+            if (maxBaseScore != actualMaxBaseScore) {
+                Logger.LogInfo($"{path} max base score will be recomputed");
+                mustSave = true;
+            }
+
+            if (maxCombo != actualMaxCombo) {
+                Logger.LogInfo($"{path} max combo will be recomputed");
+                mustSave = true;
+            }
+
+            if (!mustSave)
+                return;
+
+            var newData = new ChartData(
+                existingData.Name,
+                existingData.ID,
+                existingData.Difficulty,
+                existingData.Intensity,
+                existingData.IsCustom,
+                actualMaxBaseScore,
+                actualMaxCombo,
+                existingData.BeatData,
+                existingData.Hits,
+                existingData.VibeData);
+
+            newData.SaveToFile(path);
+        }
     }
 
     private static void PlayNextInQueue() {
-        ITrackMetadata metadata;
-        Difficulty difficulty;
-
-        while (trackQueue.Count > 0) {
-            (metadata, difficulty) = trackQueue[0];
-
-            if (!File.Exists(Util.GetChartDataPath(metadata, difficulty)))
-                break;
-
-            trackQueue.RemoveAt(0);
-        }
-
         if (trackQueue.Count == 0)
             return;
 
-        (metadata, difficulty) = trackQueue[0];
+        var (metadata, difficulty) = trackQueue[0];
 
-        var dynamicScenePayload = RRDynamicScenePayload.FromMetadata(metadata, metadata.GetDifficulty(difficulty), TrackMetadataUtils.ResolveAudioChannel(metadata));
+        if (!SongDatabase.Instance.TryGetEntryForLevelId(metadata.LevelId, out _)) {
+            var dynamicScenePayload = RRDynamicScenePayload.FromMetadata(metadata, metadata.GetDifficulty(difficulty), TrackMetadataUtils.ResolveAudioChannel(metadata));
 
-        dynamicScenePayload.IsPracticeMode = false;
-        dynamicScenePayload.IsPracticeMode = false;
-        dynamicScenePayload.SetPracticeModeBeatRange(0, 0);
-        dynamicScenePayload.SetPracticeModeSpeedAdjustment(SpeedModifier.OneHundredPercent);
-        dynamicScenePayload.ShouldProcGen = false;
-        dynamicScenePayload.ProcGenSeed = string.Empty;
-        dynamicScenePayload.IsRandomSeed = false;
-        SceneLoadData.SetCurrentScenePayload(dynamicScenePayload);
+            dynamicScenePayload.IsPracticeMode = false;
+            dynamicScenePayload.IsPracticeMode = false;
+            dynamicScenePayload.SetPracticeModeBeatRange(0, 0);
+            dynamicScenePayload.SetPracticeModeSpeedAdjustment(SpeedModifier.OneHundredPercent);
+            dynamicScenePayload.ShouldProcGen = false;
+            dynamicScenePayload.ProcGenSeed = string.Empty;
+            dynamicScenePayload.IsRandomSeed = false;
+            SceneLoadData.SetCurrentScenePayload(dynamicScenePayload);
+        }
 
         var sceneToLoadMetadata = new SceneLoadData.SceneToLoadMetaData() {
             SceneName = "RhythmRift",

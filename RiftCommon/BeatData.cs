@@ -7,11 +7,13 @@ public readonly struct BeatData {
 
     public readonly float BPM;
     public readonly int BeatDivisions;
+    public readonly BPMChange[] BPMChanges;
     public readonly double[] BeatTimings;
 
-    public BeatData(float bpm, int beatDivisions, double[] beatTimings) {
+    public BeatData(float bpm, int beatDivisions, BPMChange[] bpmChanges, double[] beatTimings) {
         BPM = bpm;
         BeatDivisions = beatDivisions;
+        BPMChanges = bpmChanges;
         BeatTimings = beatTimings;
     }
 

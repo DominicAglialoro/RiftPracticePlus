@@ -6,9 +6,7 @@ using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using MonoMod.RuntimeDetour;
 using RiftCommon;
-using Shared.SceneLoading.Payloads;
 using Shared.TrackData;
-using Shared.TrackSelection;
 using Difficulty = Shared.Difficulty;
 
 namespace RiftPracticePlus;
@@ -62,6 +60,33 @@ internal static class Util {
         3211 => EnemyType.Ham,
         _ => throw new ArgumentOutOfRangeException(nameof(id), id, null)
     };
+
+    public static int ComputeMaxBaseScore(Hit[] hits) {
+        int score = 0;
+
+        foreach (var hit in hits) {
+            if (hit.GivesVibe)
+                continue;
+
+            score += hit.Score + 2;
+
+            if (hit.EnemyType == EnemyType.Wyrm)
+                score += 333 * (int) Math.Round(hit.EndBeat - hit.Beat);
+        }
+
+        return score;
+    }
+
+    public static int ComputeMaxCombo(Hit[] hits) {
+        int combo = 0;
+
+        foreach (var hit in hits) {
+            if (!hit.GivesVibe)
+                combo++;
+        }
+
+        return combo;
+    }
 
     public static string GetChartDataPath(ITrackMetadata metadata, Difficulty difficulty) {
         string directory;
