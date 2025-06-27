@@ -44,8 +44,15 @@ The generated binary files consist of the following values, with the specified t
 4 = Impossible
 * The intensity of the chart (float)
 * Whether the chart is a custom chart (bool)
+* The maximum score attainable without using Vibe (int)
+* The maximum combo possible (int)
 * The BPM of the chart (float)
 * The number of divisions per beat (int)
+* The number of BPM changes in the chart (int)
+* For each BPM change:
+  * The time of the BPM change (double)
+  * The beat of the BPM change (double)
+  * The new BPM (float)
 * The number of beat timings stored in the chart (int)
 * For each beat timing, the value of that timing (double)
 * The number of captured hits (int)
