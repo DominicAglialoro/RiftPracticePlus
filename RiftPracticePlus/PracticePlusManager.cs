@@ -7,7 +7,6 @@ using RiftCommon;
 using Shared;
 using Shared.RhythmEngine;
 using Shared.SceneLoading.Payloads;
-using Shared.TrackData;
 using UnityEngine;
 
 namespace RiftPracticePlus;

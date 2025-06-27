@@ -1,7 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using System.Text.RegularExpressions;
+using System.Text;
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using MonoMod.RuntimeDetour;
@@ -12,6 +13,10 @@ using Difficulty = Shared.Difficulty;
 namespace RiftPracticePlus;
 
 internal static class Util {
+    private static readonly HashSet<char> VALID_FILE_SYMBOLS = new() {
+        '`', '~', '!', '@', '#', '$', '%', '^', '&', '(', ')', '-', '_', '=', '+', '[', '{', ']', '}', ';', '\'', ',', '.'
+    };
+
     private static readonly BindingFlags ALL_FLAGS = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
 
     public static Hook CreateMethodHook(this Type type, string name, Delegate method)
@@ -96,6 +101,19 @@ internal static class Util {
         else
             directory = Path.Combine(Plugin.AssemblyPath, "ChartData");
 
-        return Path.Combine(directory, $"{Regex.Replace(metadata.TrackName, @"[^\w\s`~!@#$%^&()-=+\[\]\{\};',]", "-", RegexOptions.Compiled)}_{metadata.LevelId}_{difficulty}.bin");
+        return Path.Combine(directory, $"{ReplaceInvalidFileChars(metadata.TrackName)}_{metadata.LevelId}_{difficulty}.bin");
+    }
+
+    public static string ReplaceInvalidFileChars(string str) {
+        var builder = new StringBuilder();
+
+        foreach (char c in str) {
+            if (c < 128 && (char.IsLetterOrDigit(c) || char.IsWhiteSpace(c) || VALID_FILE_SYMBOLS.Contains(c)))
+                builder.Append(c);
+            else
+                builder.Append('-');
+        }
+
+        return builder.ToString();
     }
 }
