@@ -1,16 +1,6 @@
 ﻿namespace RiftCommon;
 
-public readonly struct VibeData {
-    public readonly int MaxVibeBonus;
-    public readonly Activation[] SingleVibeActivations;
-    public readonly Activation[] DoubleVibeActivations;
-
-    public VibeData(int maxVibeBonus, Activation[] singleVibeActivations, Activation[] doubleVibeActivations) {
-        MaxVibeBonus = maxVibeBonus;
-        SingleVibeActivations = singleVibeActivations;
-        DoubleVibeActivations = doubleVibeActivations;
-    }
-
+public record struct VibeData(int MaxVibeBonus, Activation[] SingleVibeActivations, Activation[] DoubleVibeActivations) {
     public bool TryGetActivationAt(double time, bool isDouble, out Activation activation) {
         var activations = isDouble ? DoubleVibeActivations : SingleVibeActivations;
         int min = 0;

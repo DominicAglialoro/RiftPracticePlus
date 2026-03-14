@@ -2,18 +2,6 @@
 
 namespace RiftPracticePlus;
 
-public readonly struct HitGroup : IComparable<HitGroup> {
-    public readonly double Time;
-    public readonly double Beat;
-    public readonly int Score;
-    public readonly bool GivesVibe;
-
-    public HitGroup(double time, double beat, int score, bool givesVibe) {
-        Time = time;
-        Beat = beat;
-        Score = score;
-        GivesVibe = givesVibe;
-    }
-
+public record struct HitGroup(double Time, double Beat, int Score, bool GivesVibe) : IComparable<HitGroup> {
     public int CompareTo(HitGroup other) => Time.CompareTo(other.Time);
 }

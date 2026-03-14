@@ -22,35 +22,14 @@ public static class Solver {
         for (int i = 0; i < doubleVibeActivationData.Count; i++)
             doubleVibeActivations[i] = GetActivationFromData(data, doubleVibeActivationData, i);
 
-        var bestNextActivationsByFirstVibeIndex = GetBestNextActivationsByFirstVibeIndex(data, singleVibeActivationData, doubleVibeActivationData, out int totalScore);
+        var (bestNextActivationsByFirstVibeIndex, totalScore) = GetBestNextActivationsByFirstVibeIndex(data, singleVibeActivationData, doubleVibeActivationData);
         var (bestSingleVibeActivationIndices, bestDoubleVibeActivationIndices) = GetBestActivationIndices(data, singleVibeActivationData, doubleVibeActivationData, bestNextActivationsByFirstVibeIndex);
 
-        foreach (int i in bestSingleVibeActivationIndices) {
-            var activation = singleVibeActivations[i];
+        foreach (int i in bestSingleVibeActivationIndices)
+            singleVibeActivations[i].IsOptimal = true;
 
-            singleVibeActivations[i] = new Activation(
-                activation.MinStartTime,
-                activation.MinStartBeat,
-                activation.MaxStartTime,
-                activation.MaxStartBeat,
-                activation.LastHitTime,
-                activation.LastHitBeat,
-                activation.Score, true);
-        }
-
-
-        foreach (int i in bestDoubleVibeActivationIndices) {
-            var activation = doubleVibeActivations[i];
-
-            doubleVibeActivations[i] = new Activation(
-                activation.MinStartTime,
-                activation.MinStartBeat,
-                activation.MaxStartTime,
-                activation.MaxStartBeat,
-                activation.LastHitTime,
-                activation.LastHitBeat,
-                activation.Score, true);
-        }
+        foreach (int i in bestDoubleVibeActivationIndices)
+            doubleVibeActivations[i].IsOptimal = true;
 
         Array.Sort(singleVibeActivations);
         Array.Sort(doubleVibeActivations);
@@ -253,12 +232,11 @@ public static class Solver {
         return hitWindowInBeats - Math.Floor(hitWindowInBeats * beatDivisions) / beatDivisions;
     }
 
-    private static Dictionary<int, BestNextActivations> GetBestNextActivationsByFirstVibeIndex(SolverData data, List<ActivationData> singleVibeActivations, List<ActivationData> doubleVibeActivations, out int totalScore) {
+    private static (Dictionary<int, BestNextActivations>, int) GetBestNextActivationsByFirstVibeIndex(SolverData data, List<ActivationData> singleVibeActivations, List<ActivationData> doubleVibeActivations) {
         var bestNextActivationsByFirstVibeIndex = new Dictionary<int, BestNextActivations>();
+        int totalScore = GetBestNextActivations(0).BestNextValue;
 
-        totalScore = GetBestNextActivations(0).BestNextValue;
-
-        return bestNextActivationsByFirstVibeIndex;
+        return (bestNextActivationsByFirstVibeIndex, totalScore);
 
         BestNextActivations GetBestNextActivations(int fromIndex) {
             int firstVibeIndex = data.GetNextVibe(fromIndex);
