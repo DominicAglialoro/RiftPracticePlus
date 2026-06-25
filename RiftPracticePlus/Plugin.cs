@@ -32,6 +32,7 @@ public class Plugin : BaseUnityPlugin {
     public static ConfigEntry<bool> ShowPracticePlusWindow { get; private set; }
     public static ConfigEntry<int> WindowPositionX { get; private set; }
     public static ConfigEntry<int> WindowPositionY { get; private set; }
+    public static ConfigEntry<float> CaptureSpeedMultiplier { get; private set; }
 
     public static string AssemblyPath { get; } = Path.GetDirectoryName(typeof(Plugin).Assembly.Location);
     public new static ManualLogSource Logger { get; private set; }
@@ -43,13 +44,14 @@ public class Plugin : BaseUnityPlugin {
 
     private void Awake() {
         ShowPracticePlusWindow = Config.Bind("General", "ShowPracticePlusWindow", true, "Whether or not to show the Practice Plus window when loading a chart in practice mode. Can be toggled by pressing P");
-        WindowPositionX = Config.Bind("General", "Window Position X", 0, "The X position of the Practice Plus window");
-        WindowPositionY = Config.Bind("General", "Window Position Y", 0, "The Y position of the Practice Plus window");
+        WindowPositionX = Config.Bind("General", "WindowPositionX", 0, "The X position of the Practice Plus window");
+        WindowPositionY = Config.Bind("General", "WindowPositionY", 0, "The Y position of the Practice Plus window");
+        CaptureSpeedMultiplier = Config.Bind("General", "CaptureSpeedMultiplier", 1f, "The speed multiplier to apply to gameplay when capturing chart data. Setting this too high may cause autoplay to miss");
         practicePlusWindow = new PracticePlusWindow(WindowPositionX.Value, WindowPositionY.Value, WINDOW_WIDTH, WINDOW_HEIGHT);
         Logger = base.Logger;
         Logger.LogInfo("Loaded RiftPracticePlus");
 
-        // typeof(TrackSelectionSceneController).CreateMethodHook(nameof(TrackSelectionSceneController.Update), TrackSelectionSceneController_Update);
+        typeof(TrackSelectionSceneController).CreateMethodHook(nameof(TrackSelectionSceneController.Update), TrackSelectionSceneController_Update);
         typeof(RRStageController).CreateMethodHook(nameof(RRStageController.PlayStageIntro), RRStageController_PlayStageIntro);
         typeof(RRStageController).CreateMethodHook(nameof(RRStageController.ShowResultsScreen), RRStageController_ShowResultsScreen);
         typeof(RRStageController).CreateILHook(nameof(RRStageController.ProcessHitData), RRStageController_ProcessHitData_IL);
@@ -109,6 +111,7 @@ public class Plugin : BaseUnityPlugin {
                 chartCaptureManager = new GameObject("Chart Capture Manager", typeof(ChartCaptureManager)).GetComponent<ChartCaptureManager>();
 
             chartCaptureManager.Init(rrStageController.BeatmapPlayer);
+            rrStageController.BeatmapPlayer._activeSpeedAdjustment = CaptureSpeedMultiplier.Value;
         }
 
         return playStageIntro(rrStageController);
@@ -161,18 +164,13 @@ public class Plugin : BaseUnityPlugin {
     private static void TrackSelectionSceneController_Update(Action<TrackSelectionSceneController> update, TrackSelectionSceneController trackSelectionSceneController) {
         update(trackSelectionSceneController);
 
-        if (!Input.GetKeyDown(KeyCode.P))
+        if (!(Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) || !Input.GetKeyDown(KeyCode.P))
             return;
 
         trackQueue.Clear();
 
-        foreach (var rrTrackMetaData in trackSelectionSceneController._trackMetaDatas) {
-            if (rrTrackMetaData.IsTutorial || rrTrackMetaData.IsFiller || rrTrackMetaData.IsPromo)
-                continue;
-
-            var metadata = trackSelectionSceneController.TryGetDynamicMetadata(rrTrackMetaData.LevelId);
-
-            if (metadata == null)
+        foreach (var metadata in trackSelectionSceneController._trackMetaDatas) {
+            if (metadata.Category is not (TrackCategory.Base or TrackCategory.Dlc))
                 continue;
 
             CheckForFile(metadata, Difficulty.Easy);
@@ -281,6 +279,7 @@ public class Plugin : BaseUnityPlugin {
         };
 
         trackQueue.RemoveAt(0);
+        PinsController.ActiveGameplayPin = "GoldenLute";
         SceneLoadData.StageEntryType = RiftAnalyticsService.StageEntryType.StageSelectMenu;
         SceneLoadData.QueueSceneLoadingMetaData(sceneToLoadMetadata);
         SceneLoadingController.Instance.GoToScene(sceneToLoadMetadata);

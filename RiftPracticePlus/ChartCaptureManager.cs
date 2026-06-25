@@ -13,7 +13,8 @@ public class ChartCaptureManager : MonoBehaviour {
     private BeatmapPlayer beatmapPlayer;
     private Beatmap beatmap;
     private BeatData beatData;
-    private List<Hit> hits = new();
+
+    private readonly List<Hit> hits = new();
 
     public void Init(BeatmapPlayer beatmapPlayer) {
         this.beatmapPlayer = beatmapPlayer;
@@ -46,19 +47,23 @@ public class ChartCaptureManager : MonoBehaviour {
 
         Array.Sort(hitsArray);
 
+        bool success = true;
         int maxBaseScore = Util.ComputeMaxBaseScore(hitsArray);
 
         if (maxBaseScore != actualMaxBaseScore) {
             Plugin.Logger.LogWarning($"Score discrepancy found. Computed score is {maxBaseScore}. Actual score is {actualMaxBaseScore}");
-            maxBaseScore = actualMaxBaseScore;
+            success = false;
         }
 
         int maxCombo = Util.ComputeMaxCombo(hitsArray);
 
         if (maxCombo != actualMaxCombo) {
             Plugin.Logger.LogWarning($"Combo discrepancy found. Computed combo is {maxCombo}. Actual combo is {actualMaxCombo}");
-            maxCombo = actualMaxCombo;
+            success = false;
         }
+
+        if (!success)
+            return;
 
         var vibeData = Solver.Solve(new SolverData(beatData, hitsArray));
         var chartData = new ChartData(
